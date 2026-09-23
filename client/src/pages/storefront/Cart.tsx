@@ -1,33 +1,26 @@
 import React, { useState } from 'react';
 import { useCartStore } from '../../store/cartStore';
-import { Minus, Plus, X, ArrowRight, ShieldCheck, Tag } from 'lucide-react';
+import { Minus, Plus, X, ShieldCheck, Tag } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
 export const Cart = () => {
-  const { 
-    items, 
-    removeItem, 
-    updateQuantity, 
-    getSubtotal,
-    getDiscountTotal,
-    getTaxTotal,
-    getShippingTotal,
-    getGrandTotal,
-    couponCode,
-    couponDiscount,
-    applyCoupon,
-    removeCoupon
-  } = useCartStore();
+  const items = useCartStore(state => state.items);
+  const removeItem = useCartStore(state => state.removeItem);
+  const updateQuantity = useCartStore(state => state.updateQuantity);
+  const couponCode = useCartStore(state => state.couponCode);
+  const couponDiscount = useCartStore(state => state.couponDiscount);
+  const applyCoupon = useCartStore(state => state.applyCoupon);
+  const removeCoupon = useCartStore(state => state.removeCoupon);
   
   const navigate = useNavigate();
   const [couponInput, setCouponInput] = useState('');
   const [couponError, setCouponError] = useState('');
 
-  const subtotal = getSubtotal();
-  const discount = getDiscountTotal();
-  const tax = getTaxTotal();
-  const shipping = getShippingTotal();
-  const total = getGrandTotal();
+  const subtotal = items.reduce((total, item) => total + item.price * item.quantity, 0);
+  const discount = (subtotal * couponDiscount) / 100;
+  const tax = (subtotal - discount) * 0.05;
+  const shipping = (subtotal - discount) > 10000 || (subtotal - discount) === 0 ? 0 : 250;
+  const total = subtotal - discount + tax + shipping;
 
   const handleApplyCoupon = (e: React.FormEvent) => {
     e.preventDefault();

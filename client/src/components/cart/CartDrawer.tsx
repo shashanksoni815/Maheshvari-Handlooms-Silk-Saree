@@ -4,7 +4,12 @@ import { useCartStore } from '../../store/cartStore';
 import { Link, useNavigate } from 'react-router-dom';
 
 export const CartDrawer = () => {
-  const { isDrawerOpen, closeDrawer, items, removeItem, updateQuantity, getSubtotal } = useCartStore();
+  const isDrawerOpen = useCartStore(state => state.isDrawerOpen);
+  const closeDrawer = useCartStore(state => state.closeDrawer);
+  const items = useCartStore(state => state.items);
+  const removeItem = useCartStore(state => state.removeItem);
+  const updateQuantity = useCartStore(state => state.updateQuantity);
+  const subtotal = useCartStore(state => state.items.reduce((total, item) => total + item.price * item.quantity, 0));
   const navigate = useNavigate();
 
   if (!isDrawerOpen) return null;
@@ -108,7 +113,7 @@ export const CartDrawer = () => {
           <div className="border-t border-supporting p-6 bg-white shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
             <div className="flex justify-between text-base font-bold text-primary uppercase tracking-widest mb-4">
               <p>Subtotal</p>
-              <p>₹{getSubtotal().toLocaleString('en-IN')}</p>
+              <p>₹{subtotal.toLocaleString('en-IN')}</p>
             </div>
             <p className="text-xs text-muted mb-6 tracking-wide">Shipping and taxes calculated at checkout.</p>
             <div className="space-y-3">

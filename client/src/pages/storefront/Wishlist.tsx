@@ -1,12 +1,13 @@
-import React from 'react';
+
 import { useWishlistStore } from '../../store/wishlistStore';
 import { useCartStore } from '../../store/cartStore';
 import { Heart, ShoppingBag, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export const Wishlist = () => {
-  const { items, removeItem } = useWishlistStore();
-  const { addItem } = useCartStore();
+  const items = useWishlistStore(state => state.items);
+  const removeItem = useWishlistStore(state => state.removeItem);
+  const addItem = useCartStore(state => state.addItem);
 
   const handleMoveToCart = (item: typeof items[0]) => {
     addItem({
@@ -44,7 +45,7 @@ export const Wishlist = () => {
         <p className="text-secondary text-sm">{items.length} {items.length === 1 ? 'item' : 'items'}</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-12">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8 lg:gap-x-8 lg:gap-y-12">
         {items.map((item) => (
           <div key={item.product} className="group relative">
             <div className="relative w-full aspect-[2/3] overflow-hidden bg-gray-100 mb-4">

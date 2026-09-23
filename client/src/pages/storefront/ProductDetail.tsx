@@ -46,9 +46,12 @@ export const ProductDetail = () => {
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
   
-  const { addItem, toggleDrawer } = useCartStore();
-  const { addItem: addWishlist, removeItem: removeWishlist, items: wishlistItems } = useWishlistStore();
-  const { isAuthenticated } = useAuthStore();
+  const addItem = useCartStore(state => state.addItem);
+  const toggleDrawer = useCartStore(state => state.toggleDrawer);
+  const addWishlist = useWishlistStore(state => state.addItem);
+  const removeWishlist = useWishlistStore(state => state.removeItem);
+  const wishlistItems = useWishlistStore(state => state.items);
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['product', id],

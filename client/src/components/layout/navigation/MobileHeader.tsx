@@ -9,8 +9,8 @@ interface MobileHeaderProps {
 }
 
 export const MobileHeader: React.FC<MobileHeaderProps> = ({ onMenuClick, onSearchClick }) => {
-  const { toggleDrawer, getTotalItems } = useCartStore();
-  const cartCount = getTotalItems();
+  const toggleDrawer = useCartStore(state => state.toggleDrawer);
+  const cartCount = useCartStore(state => state.items.reduce((total, item) => total + item.quantity, 0));
 
   return (
     <div className="lg:hidden flex items-center justify-between h-[60px] md:h-[68px] px-4 md:px-6">

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { protect, authorizePermission } from '../middleware/auth';
+import { protect, authorize, authorizePermission } from '../middleware/auth';
 import { auditLog } from '../middleware/audit';
 
 import adminProductRoutes from './admin/adminProductRoutes';
@@ -20,7 +20,7 @@ import adminSettingRoutes from './admin/adminSettingRoutes';
 const router = Router();
 
 // All routes here are protected and require at least 'ADMIN' role initially (though authorizePermission handles specific capabilities)
-router.use(protect);
+router.use(protect, authorize('ADMIN', 'SUPER_ADMIN'));
 
 router.use('/products', adminProductRoutes);
 router.use('/categories', adminCategoryRoutes);

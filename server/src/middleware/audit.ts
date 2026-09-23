@@ -28,15 +28,17 @@ export const auditLog = (action: string, resource: string) => {
         if (details.password) delete details.password;
 
         try {
-          await AuditLog.create({
+          const payload: any = {
             admin: req.user._id,
             action,
             resource,
-            resourceId: finalResourceId,
-            details,
-            ipAddress: req.ip,
-            userAgent: req.headers['user-agent'] as string | undefined
-          });
+            details
+          };
+          if (finalResourceId) payload.resourceId = finalResourceId;
+          if (req.ip) payload.ipAddress = req.ip;
+          if (req.headers['user-agent']) payload.userAgent = req.headers['user-agent'];
+
+          await AuditLog.create(payload);
         } catch (error) {
           console.error('Audit Log Error:', error);
         }

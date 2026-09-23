@@ -1,64 +1,70 @@
+import React, { Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ConfirmationModalProvider } from './components/admin/ConfirmationModal';
 import { AdminRoute } from './features/auth/AdminRoute';
 import { AdminLayout } from './layouts/AdminLayout';
-import { Dashboard } from './pages/admin/Dashboard';
-import { Products } from './pages/admin/Products';
-import { ProductForm } from './pages/admin/ProductForm';
-import { Orders } from './pages/admin/Orders';
-import { OrderDetail } from './pages/admin/OrderDetail';
-import { Customers } from './pages/admin/Customers';
-import { CustomerDetail } from './pages/admin/CustomerDetail';
-import { Coupons } from './pages/admin/Coupons';
-import { Categories } from './pages/admin/Categories';
-import { Collections as AdminCollections } from './pages/admin/Collections';
-import { Inventory } from './pages/admin/Inventory';
-import { Reviews } from './pages/admin/Reviews';
-import { Blog } from './pages/admin/Blog';
-import { Banners } from './pages/admin/Banners';
-import { CMSManager } from './pages/admin/CMSManager';
-import { AdminUsers } from './pages/admin/AdminUsers';
-import { AuditLogs } from './pages/admin/AuditLogs';
-import { Roles } from './pages/admin/Roles';
-import { Reports } from './pages/admin/Reports';
-import { Settings } from './pages/admin/Settings';
-
-import { LoginForm } from './features/auth/LoginForm';
-import { RegisterForm } from './features/auth/RegisterForm';
 import { StorefrontLayout } from './layouts/StorefrontLayout';
-import { Home } from './pages/storefront/Home';
-import { Shop } from './pages/storefront/Shop';
-import { ProductDetail } from './pages/storefront/ProductDetail';
-import { Cart } from './pages/storefront/Cart';
-import { Checkout } from './pages/storefront/Checkout';
-import { Account } from './pages/storefront/Account';
-import { Wishlist } from './pages/storefront/Wishlist';
-import { Journal } from './pages/storefront/Journal';
-import { JournalArticle } from './pages/storefront/JournalArticle';
-import { ShippingPolicy, CancellationPolicy, PrivacyPolicy, TermsAndConditions, CareGuide } from './pages/storefront/PolicyPages';
-import { OrderSuccess } from './pages/storefront/OrderSuccess';
-import { Contact } from './pages/storefront/Contact';
-import { Faq } from './pages/storefront/Faq';
-import { NotFound } from './pages/NotFound';
+import { ProtectedRoute } from './features/auth/ProtectedRoute';
+import { Loader } from './components/common/Loader';
 
-import { Collections } from './pages/storefront/Collections';
-import { CollectionDetail } from './pages/storefront/CollectionDetail';
-import { AboutUs } from './pages/storefront/AboutUs';
-import { Stores } from './pages/storefront/Stores';
-import { 
-  AccountProfile, 
-  AccountOrders, 
-  AccountOrderDetails, 
-  AccountAddresses, 
-  AccountWishlist, 
-  AccountReviews 
-} from './pages/storefront/AccountSubPages';
+const Dashboard = React.lazy(() => import('./pages/admin/Dashboard').then(m => ({ default: m.Dashboard })));
+const Products = React.lazy(() => import('./pages/admin/Products').then(m => ({ default: m.Products })));
+const ProductForm = React.lazy(() => import('./pages/admin/ProductForm').then(m => ({ default: m.ProductForm })));
+const Orders = React.lazy(() => import('./pages/admin/Orders').then(m => ({ default: m.Orders })));
+const OrderDetail = React.lazy(() => import('./pages/admin/OrderDetail').then(m => ({ default: m.OrderDetail })));
+const Customers = React.lazy(() => import('./pages/admin/Customers').then(m => ({ default: m.Customers })));
+const CustomerDetail = React.lazy(() => import('./pages/admin/CustomerDetail').then(m => ({ default: m.CustomerDetail })));
+const Coupons = React.lazy(() => import('./pages/admin/Coupons').then(m => ({ default: m.Coupons })));
+const Categories = React.lazy(() => import('./pages/admin/Categories').then(m => ({ default: m.Categories })));
+const AdminCollections = React.lazy(() => import('./pages/admin/Collections').then(m => ({ default: m.Collections })));
+const Inventory = React.lazy(() => import('./pages/admin/Inventory').then(m => ({ default: m.Inventory })));
+const Reviews = React.lazy(() => import('./pages/admin/Reviews').then(m => ({ default: m.Reviews })));
+const Blog = React.lazy(() => import('./pages/admin/Blog').then(m => ({ default: m.Blog })));
+const Banners = React.lazy(() => import('./pages/admin/Banners').then(m => ({ default: m.Banners })));
+const CMSManager = React.lazy(() => import('./pages/admin/CMSManager').then(m => ({ default: m.CMSManager })));
+const AdminUsers = React.lazy(() => import('./pages/admin/AdminUsers').then(m => ({ default: m.AdminUsers })));
+const AuditLogs = React.lazy(() => import('./pages/admin/AuditLogs').then(m => ({ default: m.AuditLogs })));
+const Roles = React.lazy(() => import('./pages/admin/Roles').then(m => ({ default: m.Roles })));
+const Reports = React.lazy(() => import('./pages/admin/Reports').then(m => ({ default: m.Reports })));
+const Settings = React.lazy(() => import('./pages/admin/Settings').then(m => ({ default: m.Settings })));
+
+const LoginForm = React.lazy(() => import('./features/auth/LoginForm').then(m => ({ default: m.LoginForm })));
+const RegisterForm = React.lazy(() => import('./features/auth/RegisterForm').then(m => ({ default: m.RegisterForm })));
+const Home = React.lazy(() => import('./pages/storefront/Home').then(m => ({ default: m.Home })));
+const Shop = React.lazy(() => import('./pages/storefront/Shop').then(m => ({ default: m.Shop })));
+const ProductDetail = React.lazy(() => import('./pages/storefront/ProductDetail').then(m => ({ default: m.ProductDetail })));
+const Cart = React.lazy(() => import('./pages/storefront/Cart').then(m => ({ default: m.Cart })));
+const Checkout = React.lazy(() => import('./pages/storefront/Checkout').then(m => ({ default: m.Checkout })));
+const Account = React.lazy(() => import('./pages/storefront/Account').then(m => ({ default: m.Account })));
+const Wishlist = React.lazy(() => import('./pages/storefront/Wishlist').then(m => ({ default: m.Wishlist })));
+const Journal = React.lazy(() => import('./pages/storefront/Journal').then(m => ({ default: m.Journal })));
+const JournalArticle = React.lazy(() => import('./pages/storefront/JournalArticle').then(m => ({ default: m.JournalArticle })));
+const ShippingPolicy = React.lazy(() => import('./pages/storefront/PolicyPages').then(m => ({ default: m.ShippingPolicy })));
+const CancellationPolicy = React.lazy(() => import('./pages/storefront/PolicyPages').then(m => ({ default: m.CancellationPolicy })));
+const PrivacyPolicy = React.lazy(() => import('./pages/storefront/PolicyPages').then(m => ({ default: m.PrivacyPolicy })));
+const TermsAndConditions = React.lazy(() => import('./pages/storefront/PolicyPages').then(m => ({ default: m.TermsAndConditions })));
+const CareGuide = React.lazy(() => import('./pages/storefront/PolicyPages').then(m => ({ default: m.CareGuide })));
+const OrderSuccess = React.lazy(() => import('./pages/storefront/OrderSuccess').then(m => ({ default: m.OrderSuccess })));
+const Contact = React.lazy(() => import('./pages/storefront/Contact').then(m => ({ default: m.Contact })));
+const Faq = React.lazy(() => import('./pages/storefront/Faq').then(m => ({ default: m.Faq })));
+const NotFound = React.lazy(() => import('./pages/NotFound').then(m => ({ default: m.NotFound })));
+const Collections = React.lazy(() => import('./pages/storefront/Collections').then(m => ({ default: m.Collections })));
+const CollectionDetail = React.lazy(() => import('./pages/storefront/CollectionDetail').then(m => ({ default: m.CollectionDetail })));
+const AboutUs = React.lazy(() => import('./pages/storefront/AboutUs').then(m => ({ default: m.AboutUs })));
+const Stores = React.lazy(() => import('./pages/storefront/Stores').then(m => ({ default: m.Stores })));
+const AccountProfile = React.lazy(() => import('./pages/storefront/AccountSubPages').then(m => ({ default: m.AccountProfile })));
+const AccountOrders = React.lazy(() => import('./pages/storefront/AccountSubPages').then(m => ({ default: m.AccountOrders })));
+const AccountOrderDetails = React.lazy(() => import('./pages/storefront/AccountSubPages').then(m => ({ default: m.AccountOrderDetails })));
+const AccountAddresses = React.lazy(() => import('./pages/storefront/AccountSubPages').then(m => ({ default: m.AccountAddresses })));
+const AccountWishlist = React.lazy(() => import('./pages/storefront/AccountSubPages').then(m => ({ default: m.AccountWishlist })));
+const AccountReviews = React.lazy(() => import('./pages/storefront/AccountSubPages').then(m => ({ default: m.AccountReviews })));
 
 const App = () => {
   return (
     <BrowserRouter>
       <ConfirmationModalProvider>
-        <Routes>
+        <Suspense fallback={<Loader />}>
+          <Routes>
           {/* Storefront Routes */}
         <Route element={<StorefrontLayout />}>
           <Route path="/" element={<Home />} />
@@ -68,21 +74,23 @@ const App = () => {
           <Route path="/collections" element={<Collections />} />
           <Route path="/collections/:slug" element={<CollectionDetail />} />
           <Route path="/product/:id" element={<ProductDetail />} />
-          <Route path="/cart" element={<Cart />} />
-          <Route path="/checkout" element={<Checkout />} />
-          <Route path="/order-success/:id" element={<OrderSuccess />} />
-          
-          <Route path="/account" element={<Account />}>
-            <Route index element={<Navigate to="profile" replace />} />
-            <Route path="profile" element={<AccountProfile />} />
-            <Route path="orders" element={<AccountOrders />} />
-            <Route path="orders/:orderId" element={<AccountOrderDetails />} />
-            <Route path="addresses" element={<AccountAddresses />} />
-            <Route path="wishlist" element={<AccountWishlist />} />
-            <Route path="reviews" element={<AccountReviews />} />
+          <Route element={<ProtectedRoute />}>
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/order-success/:id" element={<OrderSuccess />} />
+            
+            <Route path="/account" element={<Account />}>
+              <Route index element={<Navigate to="profile" replace />} />
+              <Route path="profile" element={<AccountProfile />} />
+              <Route path="orders" element={<AccountOrders />} />
+              <Route path="orders/:orderId" element={<AccountOrderDetails />} />
+              <Route path="addresses" element={<AccountAddresses />} />
+              <Route path="wishlist" element={<AccountWishlist />} />
+              <Route path="reviews" element={<AccountReviews />} />
+            </Route>
+            
+            <Route path="/wishlist" element={<Wishlist />} />
           </Route>
-          
-          <Route path="/wishlist" element={<Wishlist />} />
           <Route path="/journal" element={<Journal />} />
           <Route path="/journal/:slug" element={<JournalArticle />} />
           <Route path="/contact" element={<Contact />} />
@@ -128,9 +136,9 @@ const App = () => {
           </Route>
         </Route>
 
-        {/* Fallback */}
-        <Route path="*" element={<NotFound />} />
-        </Routes>
+          <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
       </ConfirmationModalProvider>
     </BrowserRouter>
   );

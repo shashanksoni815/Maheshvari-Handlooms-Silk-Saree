@@ -16,9 +16,9 @@ export const LuxuryHeader = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isAccountOpen, setIsAccountOpen] = useState(false);
   
-  const { toggleDrawer, getTotalItems } = useCartStore();
+  const toggleDrawer = useCartStore(state => state.toggleDrawer);
   const wishlistCount = useWishlistStore((s) => s.items.length);
-  const cartCount = getTotalItems();
+  const cartCount = useCartStore(state => state.items.reduce((total, item) => total + item.quantity, 0));
 
   useEffect(() => {
     const handleScroll = () => {

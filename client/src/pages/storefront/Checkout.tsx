@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useCartStore } from '../../store/cartStore';
 import { useAuthStore } from '../../store/authStore';
 import { useNavigate, Link } from 'react-router-dom';
@@ -21,26 +21,21 @@ const addressSchema = z.object({
 type CheckoutFormValues = z.infer<typeof addressSchema>;
 
 export const Checkout = () => {
-  const { 
-    items, 
-    getSubtotal, 
-    getDiscountTotal,
-    getTaxTotal,
-    getShippingTotal,
-    getGrandTotal,
-    couponCode,
-    clearCart 
-  } = useCartStore();
+  const items = useCartStore(state => state.items);
+  const couponCode = useCartStore(state => state.couponCode);
+  const couponDiscount = useCartStore(state => state.couponDiscount);
+  const clearCart = useCartStore(state => state.clearCart);
   
-  const { user, isAuthenticated } = useAuthStore();
+  const user = useAuthStore(state => state.user);
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
   const navigate = useNavigate();
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const subtotal = getSubtotal();
-  const discount = getDiscountTotal();
-  const tax = getTaxTotal();
-  const shipping = getShippingTotal();
-  const total = getGrandTotal();
+  const subtotal = items.reduce((total, item) => total + item.price * item.quantity, 0);
+  const discount = (subtotal * couponDiscount) / 100;
+  const tax = (subtotal - discount) * 0.05;
+  const shipping = (subtotal - discount) > 10000 || (subtotal - discount) === 0 ? 0 : 250;
+  const total = subtotal - discount + tax + shipping;
 
   const { register, handleSubmit, formState: { errors } } = useForm<CheckoutFormValues>({
     resolver: zodResolver(addressSchema),
