@@ -24,11 +24,14 @@ dotenv.config();
 // Connect to Database
 connectDB();
 
+import cookieParser from 'cookie-parser';
+
 const app: Application = express();
 
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 // CORS configuration - adjust origin for production
 app.use(
