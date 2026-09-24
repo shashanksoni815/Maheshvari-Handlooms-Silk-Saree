@@ -47,7 +47,7 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose }) => {
     navigate('/');
   };
 
-  const menuConfig = [
+  const menuConfig: Array<{ name: string; id?: string; path?: string; submenus?: Array<{ name: string; path: string }> }> = [
     { name: 'Home', path: '/' },
     {
       name: 'Sarees',
@@ -114,7 +114,7 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose }) => {
                     {item.submenus ? (
                       <div className="flex flex-col">
                         <button
-                          onClick={() => toggleAccordion(item.id)}
+                          onClick={() => toggleAccordion(item.id as string)}
                           className="w-full flex items-center justify-between px-6 py-4 text-left font-serif text-lg text-primary transition-colors hover:bg-supporting/20"
                         >
                           {item.name}
@@ -135,7 +135,7 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose }) => {
                               className="overflow-hidden bg-supporting/10"
                             >
                               <ul className="py-2 pl-8 pr-6 space-y-1">
-                                {item.submenus.map((sub) => (
+                                {item.submenus.map((sub: { name: string; path: string }) => (
                                   <li key={sub.name}>
                                     <Link
                                       to={sub.path}
@@ -160,7 +160,7 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose }) => {
                       </div>
                     ) : (
                       <Link
-                        to={item.path}
+                      to={item.path as string}
                         onClick={onClose}
                         className="block px-6 py-4 font-serif text-lg text-primary transition-colors hover:bg-supporting/20"
                       >
