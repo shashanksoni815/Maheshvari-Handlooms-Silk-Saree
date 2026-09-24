@@ -26,6 +26,9 @@ export const getCategoryById = async (req: Request, res: Response, next: NextFun
 
 export const createCategory = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    if (!req.body.slug && req.body.name) {
+      req.body.slug = req.body.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    }
     const category = await Category.create(req.body);
     res.status(201).json(new ApiResponse('Category created successfully', category));
   } catch (error) {
@@ -35,6 +38,9 @@ export const createCategory = async (req: Request, res: Response, next: NextFunc
 
 export const updateCategory = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    if (!req.body.slug && req.body.name) {
+      req.body.slug = req.body.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    }
     const category = await Category.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,

@@ -8,7 +8,7 @@ export const JournalMegaMenu = () => {
     queryKey: ['featured-blog'],
     queryFn: async () => {
       // Fetching the most recent blog as a featured article fallback
-      const res = await api.get('/blog');
+      const res = await api.get('/blogs');
       return res.data?.data?.[0]; 
     }
   });

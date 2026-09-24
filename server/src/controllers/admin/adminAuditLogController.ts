@@ -5,7 +5,7 @@ import { ApiResponse } from '../../utils/apiResponse';
 export const getAuditLogs = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const logs = await AuditLog.find()
-      .populate('user', 'firstName lastName email')
+      .populate('admin', 'firstName lastName email')
       .sort({ createdAt: -1 })
       .limit(500); // Limit to recent 500 for performance
 

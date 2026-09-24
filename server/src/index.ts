@@ -17,6 +17,7 @@ import userRoutes from './routes/userRoutes';
 import couponRoutes from './routes/couponRoutes';
 import collectionRoutes from './routes/collectionRoutes';
 import reviewRoutes from './routes/reviewRoutes';
+import bannerRoutes from './routes/bannerRoutes';
 import adminRoutes from './routes/adminRoutes';
 
 dotenv.config();
@@ -66,6 +67,7 @@ app.use('/api/v1/payments', paymentRoutes);
 app.use('/api/v1/addresses', addressRoutes);
 app.use('/api/v1/blogs', blogRoutes);
 app.use('/api/v1/coupons', couponRoutes);
+app.use('/api/v1/banners', bannerRoutes);
 app.use('/api/v1/admin', adminRoutes);
 
 // Error Handling Middleware

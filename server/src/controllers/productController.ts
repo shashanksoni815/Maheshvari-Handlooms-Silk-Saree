@@ -7,7 +7,7 @@ export const getProducts = async (req: Request, res: Response, next: NextFunctio
   try {
     const { 
       category, collection, search, sort, status, limit, page,
-      fabric, silkType, weave, color, minPrice, maxPrice, zariType, inStock
+      fabric, silkType, weave, color, minPrice, maxPrice, zariType, inStock, tags
     } = req.query;
 
     const query: any = {};
@@ -18,14 +18,18 @@ export const getProducts = async (req: Request, res: Response, next: NextFunctio
     if (collection) query.collections = collection;
     
     // Deep Filters
-    if (fabric) query['attributes.fabric'] = fabric;
-    if (silkType) query['attributes.silkType'] = silkType;
-    if (weave) query['attributes.weave'] = weave;
-    if (zariType) query['attributes.zariType'] = zariType;
+    if (fabric) query['attributes.fabric'] = { $in: (fabric as string).split(',') };
+    if (silkType) query['attributes.silkType'] = { $in: (silkType as string).split(',') };
+    if (weave) query['attributes.weave'] = { $in: (weave as string).split(',') };
+    if (zariType) query['attributes.zariType'] = { $in: (zariType as string).split(',') };
     
     if (color) {
-      // Assuming color might be a tag or an attribute in the future. We'll search tags for now.
-      query.tags = { $in: [color] };
+      query.tags = { $in: (color as string).split(',') };
+    }
+    
+    if (tags) {
+      if (!query.tags) query.tags = {};
+      query.tags.$in = [...(query.tags.$in || []), ...(tags as string).split(',')];
     }
 
     if (minPrice || maxPrice) {
@@ -126,6 +130,36 @@ export const deleteProduct = async (req: Request, res: Response, next: NextFunct
       return next(new ApiError(404, 'Product not found'));
     }
     res.status(200).json(new ApiResponse('Product deleted successfully'));
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getProductFilters = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const query = { status: 'PUBLISHED' };
+    
+    // Run distinct queries in parallel for better performance
+    const [fabrics, silkTypes, weaves, colors] = await Promise.all([
+      Product.distinct('attributes.fabric', query),
+      Product.distinct('attributes.silkType', query),
+      Product.distinct('attributes.weave', query),
+      // We mapped color to tags earlier. Assuming tags contain colors or just distinct colors from attributes if we add it
+      Product.distinct('attributes.color', query) // Wait, we didn't have attributes.color in the backend schema?
+    ]);
+    
+    // Fallback: If attributes.color is empty, distinct tags.
+    let colorList = colors.filter(Boolean);
+    if (colorList.length === 0) {
+      colorList = await Product.distinct('tags', query);
+    }
+
+    res.status(200).json(new ApiResponse('Filters fetched successfully', {
+      fabric: fabrics.filter(Boolean),
+      silkType: silkTypes.filter(Boolean),
+      weave: weaves.filter(Boolean),
+      color: colorList.filter(Boolean)
+    }));
   } catch (error) {
     next(error);
   }

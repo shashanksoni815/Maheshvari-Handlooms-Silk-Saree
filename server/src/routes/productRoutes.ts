@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import {
   getProducts,
+  getProductFilters,
   getProductById,
   createProduct,
   updateProduct,
@@ -12,6 +13,7 @@ import { protect, authorize } from '../middleware/auth';
 const router = Router();
 
 router.get('/', getProducts);
+router.get('/config/filters', getProductFilters);
 router.get('/:id', getProductById);
 router.post('/', protect, authorize('ADMIN', 'SUPER_ADMIN'), createProduct);
 router.put('/:id', protect, authorize('ADMIN', 'SUPER_ADMIN'), updateProduct);

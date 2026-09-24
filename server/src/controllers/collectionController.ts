@@ -49,6 +49,9 @@ export const getCollectionById = async (req: Request, res: Response, next: NextF
 
 export const createCollection = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    if (!req.body.slug && req.body.name) {
+      req.body.slug = req.body.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    }
     const collection = await Collection.create(req.body);
     res.status(201).json(new ApiResponse('Collection created successfully', collection));
   } catch (error) {
@@ -58,6 +61,9 @@ export const createCollection = async (req: Request, res: Response, next: NextFu
 
 export const updateCollection = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    if (!req.body.slug && req.body.name) {
+      req.body.slug = req.body.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    }
     const collection = await Collection.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,

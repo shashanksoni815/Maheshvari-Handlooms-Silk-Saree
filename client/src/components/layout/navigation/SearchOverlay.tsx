@@ -55,7 +55,7 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
     queryKey: ['search-blogs', debouncedTerm],
     queryFn: async () => {
       if (!debouncedTerm.trim()) return null;
-      const res = await api.get(`/blog?search=${debouncedTerm}`);
+      const res = await api.get(`/blogs?search=${debouncedTerm}`);
       return res.data?.data?.slice(0, 2); // Limit to 2 for suggestions
     },
     enabled: !!debouncedTerm.trim(),
