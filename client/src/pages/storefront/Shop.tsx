@@ -36,6 +36,22 @@ export const Shop = () => {
   
   const categories = categoryData?.data || [];
 
+  // Fetch dynamic filters
+  const { data: filterData } = useQuery({
+    queryKey: ['product_filters'],
+    queryFn: async () => {
+      const response = await api.get('/products/config/filters');
+      return response.data;
+    },
+  });
+
+  const dynamicFilters = filterData?.data || {
+    fabric: [],
+    silkType: [],
+    weave: [],
+    color: []
+  };
+
   // Parse URL to set initial filters
   useEffect(() => {
     if (categorySlug && categories.length > 0) {
@@ -63,10 +79,10 @@ export const Shop = () => {
       }
     }
 
-    if (filters.fabric.length > 0) params.append('fabric', filters.fabric[0]);
-    if (filters.silkType.length > 0) params.append('silkType', filters.silkType[0]);
-    if (filters.weave.length > 0) params.append('weave', filters.weave[0]);
-    if (filters.color.length > 0) params.append('color', filters.color[0]);
+    if (filters.fabric.length > 0) params.append('fabric', filters.fabric.join(','));
+    if (filters.silkType.length > 0) params.append('silkType', filters.silkType.join(','));
+    if (filters.weave.length > 0) params.append('weave', filters.weave.join(','));
+    if (filters.color.length > 0) params.append('color', filters.color.join(','));
     if (filters.minPrice) params.append('minPrice', filters.minPrice);
     if (filters.maxPrice) params.append('maxPrice', filters.maxPrice);
     if (filters.inStock) params.append('inStock', 'true');
@@ -143,6 +159,7 @@ export const Shop = () => {
             isMobileOpen={isMobileFilterOpen} 
             setIsMobileOpen={setIsMobileFilterOpen} 
             categories={categories} 
+            dynamicOptions={dynamicFilters}
           />
 
           {/* Product Grid */}

@@ -41,6 +41,7 @@ const Journal = React.lazy(() => import('./pages/storefront/Journal').then(m => 
 const JournalArticle = React.lazy(() => import('./pages/storefront/JournalArticle').then(m => ({ default: m.JournalArticle })));
 const ShippingPolicy = React.lazy(() => import('./pages/storefront/PolicyPages').then(m => ({ default: m.ShippingPolicy })));
 const CancellationPolicy = React.lazy(() => import('./pages/storefront/PolicyPages').then(m => ({ default: m.CancellationPolicy })));
+const RefundPolicy = React.lazy(() => import('./pages/storefront/PolicyPages').then(m => ({ default: m.RefundPolicy })));
 const PrivacyPolicy = React.lazy(() => import('./pages/storefront/PolicyPages').then(m => ({ default: m.PrivacyPolicy })));
 const TermsAndConditions = React.lazy(() => import('./pages/storefront/PolicyPages').then(m => ({ default: m.TermsAndConditions })));
 const CareGuide = React.lazy(() => import('./pages/storefront/PolicyPages').then(m => ({ default: m.CareGuide })));
@@ -58,6 +59,7 @@ const AccountOrderDetails = React.lazy(() => import('./pages/storefront/AccountS
 const AccountAddresses = React.lazy(() => import('./pages/storefront/AccountSubPages').then(m => ({ default: m.AccountAddresses })));
 const AccountWishlist = React.lazy(() => import('./pages/storefront/AccountSubPages').then(m => ({ default: m.AccountWishlist })));
 const AccountReviews = React.lazy(() => import('./pages/storefront/AccountSubPages').then(m => ({ default: m.AccountReviews })));
+const AccountBankDetails = React.lazy(() => import('./pages/storefront/AccountSubPages').then(m => ({ default: m.AccountBankDetails })));
 
 const App = () => {
   return (
@@ -85,6 +87,7 @@ const App = () => {
               <Route path="orders" element={<AccountOrders />} />
               <Route path="orders/:orderId" element={<AccountOrderDetails />} />
               <Route path="addresses" element={<AccountAddresses />} />
+              <Route path="bank-details" element={<AccountBankDetails />} />
               <Route path="wishlist" element={<AccountWishlist />} />
               <Route path="reviews" element={<AccountReviews />} />
             </Route>
@@ -99,6 +102,7 @@ const App = () => {
           <Route path="/faq" element={<Faq />} />
           <Route path="/shipping-policy" element={<ShippingPolicy />} />
           <Route path="/cancellation-policy" element={<CancellationPolicy />} />
+          <Route path="/refund-policy" element={<RefundPolicy />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
           <Route path="/care-guide" element={<CareGuide />} />

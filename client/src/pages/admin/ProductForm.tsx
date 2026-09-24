@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Save, X, UploadCloud, Trash2, Loader2, ArrowLeft } from 'lucide-react';
+import { Save, UploadCloud, Trash2, Loader2, ArrowLeft } from 'lucide-react';
 import api from '../../services/api';
 
 export const ProductForm = () => {
@@ -26,8 +26,8 @@ export const ProductForm = () => {
     stock: 0,
     category: '',
     collection: '',
-    status: 'draft',
-    images: [] as string[],
+    status: 'DRAFT',
+    images: [] as { url: string; publicId: string; isPrimary?: boolean }[],
     attributes: {
       fabric: '',
       silkType: '',
@@ -38,7 +38,8 @@ export const ProductForm = () => {
       occasion: '',
       length: '5.5 meters',
       blousePiece: true
-    }
+    },
+    tags: [] as string[]
   });
 
   useEffect(() => {
@@ -76,7 +77,7 @@ export const ProductForm = () => {
         stock: p.stock || 0,
         category: p.category?._id || p.category || '',
         collection: p.collections?.[0]?._id || p.collections?.[0] || '',
-        status: p.status || 'draft',
+        status: p.status || 'DRAFT',
         images: p.images || [],
         attributes: {
           fabric: p.attributes?.fabric || '',
@@ -88,7 +89,8 @@ export const ProductForm = () => {
           occasion: p.attributes?.occasion || '',
           length: p.attributes?.length || '5.5 meters',
           blousePiece: p.attributes?.blousePiece ?? true
-        }
+        },
+        tags: p.tags || []
       });
     } catch (error) {
       console.error('Failed to load product', error);
@@ -100,15 +102,28 @@ export const ProductForm = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
-    
+
     if (name.startsWith('attr_')) {
       const attrName = name.replace('attr_', '');
       let parsedValue: any = value;
       if (type === 'checkbox') parsedValue = (e.target as HTMLInputElement).checked;
-      
+
       setFormData(prev => ({
         ...prev,
         attributes: { ...prev.attributes, [attrName]: parsedValue }
+      }));
+      return;
+    }
+
+    if (name === 'name') {
+      const generatedSlug = value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      const generatedSku = 'SKU-' + value.substring(0, 4).toUpperCase() + '-' + Math.floor(1000 + Math.random() * 9000);
+
+      setFormData(prev => ({
+        ...prev,
+        name: value,
+        slug: prev.slug || generatedSlug,
+        sku: prev.sku || generatedSku
       }));
       return;
     }
@@ -118,7 +133,7 @@ export const ProductForm = () => {
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
-    
+
     setIsUploading(true);
     const formDataObj = new FormData();
     Array.from(e.target.files).forEach(file => {
@@ -129,9 +144,13 @@ export const ProductForm = () => {
       const res = await api.post('/uploads/multiple', formDataObj, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      
-      const newUrls = res.data.data.map((img: any) => img.url);
-      setFormData(prev => ({ ...prev, images: [...prev.images, ...newUrls] }));
+
+      const newImages = res.data.data.map((img: any, idx: number) => ({
+        url: img.url,
+        publicId: img.publicId,
+        isPrimary: formData.images.length === 0 && idx === 0
+      }));
+      setFormData(prev => ({ ...prev, images: [...prev.images, ...newImages] }));
     } catch (error) {
       console.error('Failed to upload images', error);
       alert('Failed to upload images');
@@ -151,7 +170,7 @@ export const ProductForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
-    
+
     try {
       const payload = {
         ...formData,
@@ -187,14 +206,14 @@ export const ProductForm = () => {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <button 
+          <button
             type="button"
             onClick={() => navigate('/admin/products')}
             className="px-4 py-2 border border-supporting rounded-sm text-sm font-semibold text-primary hover:bg-gray-50 transition-colors"
           >
             Cancel
           </button>
-          <button 
+          <button
             onClick={handleSubmit}
             disabled={isSaving}
             className="px-4 py-2 bg-primary hover:bg-primary-light text-white rounded-sm text-sm font-semibold uppercase tracking-widest transition-colors flex items-center shadow-md disabled:opacity-50"
@@ -206,12 +225,12 @@ export const ProductForm = () => {
       </div>
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
+
         {/* Main Content - Left Column */}
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-white p-6 rounded-md shadow-sm border border-supporting/50 space-y-4">
             <h3 className="text-lg font-serif text-primary border-b border-supporting/50 pb-2">Basic Details</h3>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Product Name *</label>
@@ -238,18 +257,18 @@ export const ProductForm = () => {
 
           <div className="bg-white p-6 rounded-md shadow-sm border border-supporting/50 space-y-4">
             <h3 className="text-lg font-serif text-primary border-b border-supporting/50 pb-2">Media</h3>
-            
+
             <div className="grid grid-cols-4 gap-4">
-              {formData.images.map((url, idx) => (
+              {formData.images.map((img, idx) => (
                 <div key={idx} className="relative aspect-square rounded-sm overflow-hidden border border-supporting group">
-                  <img src={url} alt="" className="w-full h-full object-cover" />
+                  <img src={img.url} alt="" className="w-full h-full object-cover" />
                   <button type="button" onClick={() => removeImage(idx)} className="absolute top-1 right-1 bg-white/90 p-1 rounded-full text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
                     <Trash2 className="w-4 h-4" />
                   </button>
                   {idx === 0 && <span className="absolute bottom-0 left-0 right-0 bg-primary/80 text-white text-[10px] uppercase text-center py-1">Primary</span>}
                 </div>
               ))}
-              <div 
+              <div
                 onClick={() => fileInputRef.current?.click()}
                 className="aspect-square border-2 border-dashed border-supporting rounded-sm flex flex-col items-center justify-center text-muted hover:text-primary hover:border-primary transition-colors cursor-pointer bg-gray-50 hover:bg-gray-100"
               >
@@ -259,7 +278,7 @@ export const ProductForm = () => {
               <input type="file" ref={fileInputRef} onChange={handleImageUpload} multiple accept="image/*" className="hidden" />
             </div>
           </div>
-          
+
           <div className="bg-white p-6 rounded-md shadow-sm border border-supporting/50 space-y-4">
             <h3 className="text-lg font-serif text-primary border-b border-supporting/50 pb-2">Silk Attributes</h3>
             <div className="grid grid-cols-2 gap-4">
@@ -295,9 +314,10 @@ export const ProductForm = () => {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
               <select name="status" value={formData.status} onChange={handleChange} className="w-full px-3 py-2 border border-supporting rounded-sm focus:ring-1 focus:ring-accent">
-                <option value="active">Active (Published)</option>
-                <option value="draft">Draft (Hidden)</option>
-                <option value="archived">Archived</option>
+                <option value="PUBLISHED">Active (Published)</option>
+                <option value="DRAFT">Draft (Hidden)</option>
+                <option value="OUT_OF_STOCK">Out of Stock</option>
+                <option value="ARCHIVED">Archived</option>
               </select>
             </div>
             <div>
@@ -317,6 +337,53 @@ export const ProductForm = () => {
                   <option key={c._id} value={c._id}>{c.name}</option>
                 ))}
               </select>
+            </div>
+            <div className="relative">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Sections (Tags)</label>
+              <div 
+                className="w-full px-3 py-2 border border-supporting rounded-sm focus:ring-1 focus:ring-accent bg-white cursor-pointer min-h-[38px] flex flex-wrap gap-1 items-center"
+                onClick={(e) => {
+                  const el = e.currentTarget.nextElementSibling;
+                  if (el) el.classList.toggle('hidden');
+                }}
+              >
+                {formData.tags.length === 0 ? (
+                  <span className="text-gray-400">Select sections...</span>
+                ) : (
+                  formData.tags.map(t => (
+                    <span key={t} className="bg-primary/10 text-primary px-2 py-0.5 rounded text-xs">
+                      {t === 'trending' ? 'Demanding Products' : t === 'new' ? 'New Arrivals' : t === 'featured' ? 'Featured' : 'Best Seller'}
+                    </span>
+                  ))
+                )}
+              </div>
+              
+              <div className="hidden absolute z-10 w-full mt-1 bg-white border border-supporting rounded-sm shadow-lg max-h-60 overflow-auto">
+                {[
+                  { id: 'trending', label: 'Trending (Demanding Products)' },
+                  { id: 'new', label: 'New Arrival' },
+                  { id: 'featured', label: 'Featured' },
+                  { id: 'best_seller', label: 'Best Seller' }
+                ].map(option => (
+                  <label key={option.id} className="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      className="mr-2 rounded border-gray-300 text-primary focus:ring-primary"
+                      checked={formData.tags.includes(option.id)}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        setFormData(prev => ({
+                          ...prev,
+                          tags: checked 
+                            ? [...prev.tags, option.id] 
+                            : prev.tags.filter(t => t !== option.id)
+                        }));
+                      }}
+                    />
+                    <span className="text-sm">{option.label}</span>
+                  </label>
+                ))}
+              </div>
             </div>
           </div>
 

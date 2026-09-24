@@ -13,7 +13,7 @@ interface Product {
   price: number;
   stock: number;
   status: string;
-  images: string[];
+  images: { url: string; publicId: string; isPrimary: boolean }[];
 }
 
 export const Products = () => {
@@ -71,7 +71,7 @@ export const Products = () => {
         <div className="flex items-center space-x-3">
           <div className="w-12 h-12 rounded-sm bg-supporting overflow-hidden flex-shrink-0">
             {row.images && row.images.length > 0 ? (
-              <img src={row.images[0]} alt={row.name} className="w-full h-full object-cover" />
+              <img src={row.images[0].url} alt={row.name} className="w-full h-full object-cover" />
             ) : null}
           </div>
           <div>
@@ -111,8 +111,8 @@ export const Products = () => {
       header: 'Status',
       accessor: (row: Product) => (
         <span className={`px-2 py-1 rounded-full text-xs uppercase tracking-wider font-semibold ${
-          row.status === 'active' ? 'bg-green-100 text-green-800' :
-          row.status === 'draft' ? 'bg-gray-100 text-gray-800' :
+          row.status === 'PUBLISHED' ? 'bg-green-100 text-green-800' :
+          row.status === 'DRAFT' ? 'bg-gray-100 text-gray-800' :
           'bg-red-100 text-red-800'
         }`}>
           {row.status || 'Active'}

@@ -19,14 +19,13 @@ interface FilterSidebarProps {
   isMobileOpen: boolean;
   setIsMobileOpen: (open: boolean) => void;
   categories: { name: string; slug: string }[];
+  dynamicOptions?: {
+    fabric: string[];
+    silkType: string[];
+    weave: string[];
+    color: string[];
+  };
 }
-
-const FILTER_OPTIONS = {
-  fabric: ['Silk', 'Cotton Silk', 'Organza', 'Georgette', 'Chiffon', 'Linen'],
-  silkType: ['Banarasi', 'Kanjivaram', 'Tussar', 'Chanderi', 'Mysore', 'Bhagalpuri'],
-  weave: ['Handloom', 'Powerloom', 'Jamdani', 'Ikat', 'Patola'],
-  color: ['Red', 'Green', 'Blue', 'Gold', 'Black', 'Pink', 'Purple', 'Yellow', 'White', 'Maroon'],
-};
 
 const FilterSection = ({ title, options, selected, onChange }: { title: string, options: string[], selected: string[], onChange: (val: string) => void }) => {
   const [isOpen, setIsOpen] = useState(true);
@@ -77,7 +76,7 @@ const FilterSection = ({ title, options, selected, onChange }: { title: string, 
   );
 };
 
-export const FilterSidebar: React.FC<FilterSidebarProps> = ({ filters, setFilters, isMobileOpen, setIsMobileOpen, categories }) => {
+export const FilterSidebar: React.FC<FilterSidebarProps> = ({ filters, setFilters, isMobileOpen, setIsMobileOpen, categories, dynamicOptions }) => {
   
   const handleArrayFilter = (key: keyof FilterState, value: string) => {
     setFilters(prev => {
@@ -173,10 +172,18 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({ filters, setFilter
           </div>
         </div>
 
-        <FilterSection title="Fabric" options={FILTER_OPTIONS.fabric} selected={filters.fabric} onChange={(val) => handleArrayFilter('fabric', val)} />
-        <FilterSection title="Silk Type" options={FILTER_OPTIONS.silkType} selected={filters.silkType} onChange={(val) => handleArrayFilter('silkType', val)} />
-        <FilterSection title="Weave" options={FILTER_OPTIONS.weave} selected={filters.weave} onChange={(val) => handleArrayFilter('weave', val)} />
-        <FilterSection title="Color" options={FILTER_OPTIONS.color} selected={filters.color} onChange={(val) => handleArrayFilter('color', val)} />
+        {dynamicOptions?.fabric && dynamicOptions.fabric.length > 0 && (
+          <FilterSection title="Fabric" options={dynamicOptions.fabric} selected={filters.fabric} onChange={(val) => handleArrayFilter('fabric', val)} />
+        )}
+        {dynamicOptions?.silkType && dynamicOptions.silkType.length > 0 && (
+          <FilterSection title="Silk Type" options={dynamicOptions.silkType} selected={filters.silkType} onChange={(val) => handleArrayFilter('silkType', val)} />
+        )}
+        {dynamicOptions?.weave && dynamicOptions.weave.length > 0 && (
+          <FilterSection title="Weave" options={dynamicOptions.weave} selected={filters.weave} onChange={(val) => handleArrayFilter('weave', val)} />
+        )}
+        {dynamicOptions?.color && dynamicOptions.color.length > 0 && (
+          <FilterSection title="Color" options={dynamicOptions.color} selected={filters.color} onChange={(val) => handleArrayFilter('color', val)} />
+        )}
       </div>
 
       <div className="md:hidden border-t border-supporting p-4 bg-white sticky bottom-0 z-10">

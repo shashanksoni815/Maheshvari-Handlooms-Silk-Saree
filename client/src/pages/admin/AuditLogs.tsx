@@ -28,8 +28,8 @@ export const AuditLogs = () => {
 
   const filteredLogs = logs.filter(log => {
     const matchesSearch = 
-      (log.user?.firstName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-      (log.user?.email?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      (log.admin?.firstName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      (log.admin?.email?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
       (log.resourceId?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
       (log.details?.toLowerCase() || '').includes(searchTerm.toLowerCase());
       
@@ -51,7 +51,7 @@ export const AuditLogs = () => {
         <div className="p-4 border-b border-supporting bg-gray-50 flex gap-4 flex-col sm:flex-row justify-between">
           <input
             type="text"
-            placeholder="Search by user, ID, or details..."
+            placeholder="Search by admin, ID, or details..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="px-3 py-2 border border-supporting rounded-sm focus:ring-1 focus:ring-accent text-sm w-full sm:max-w-xs"
@@ -90,8 +90,8 @@ export const AuditLogs = () => {
                       {new Date(log.createdAt).toLocaleString()}
                     </td>
                     <td className="px-6 py-3">
-                      <div className="font-semibold text-primary">{log.user?.firstName} {log.user?.lastName}</div>
-                      <div className="text-[10px] text-muted">{log.user?.email}</div>
+                      <div className="font-semibold text-primary">{log.admin?.firstName} {log.admin?.lastName}</div>
+                      <div className="text-[10px] text-muted">{log.admin?.email}</div>
                     </td>
                     <td className="px-6 py-3">
                       <span className={`px-2 py-1 rounded-sm text-[10px] font-bold uppercase ${
@@ -102,11 +102,11 @@ export const AuditLogs = () => {
                       }`}>
                         {log.action}
                       </span>
-                      <span className="ml-2 font-mono text-xs font-semibold">{log.resourceType}</span>
+                      <span className="ml-2 font-mono text-xs font-semibold">{log.resource}</span>
                     </td>
                     <td className="px-6 py-3 text-xs max-w-sm">
-                      <div className="truncate" title={log.details || log.resourceId}>
-                        {log.details ? log.details : <span className="text-muted font-mono">{log.resourceId}</span>}
+                      <div className="truncate" title={typeof log.details === 'object' ? JSON.stringify(log.details) : log.details || log.resourceId}>
+                        {log.details ? (typeof log.details === 'object' ? JSON.stringify(log.details) : log.details) : <span className="text-muted font-mono">{log.resourceId}</span>}
                       </div>
                     </td>
                     <td className="px-6 py-3 text-right text-xs text-muted font-mono whitespace-nowrap">

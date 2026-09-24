@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { User, Package, MapPin, Heart, LogOut, Star } from 'lucide-react';
+import { User, Package, MapPin, Heart, LogOut, Star, CreditCard } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 
 export const Account = () => {
@@ -15,6 +15,7 @@ export const Account = () => {
     { name: 'Profile', path: '/account/profile', icon: User },
     { name: 'Orders', path: '/account/orders', icon: Package },
     { name: 'Addresses', path: '/account/addresses', icon: MapPin },
+    { name: 'Bank Details', path: '/account/bank-details', icon: CreditCard },
     { name: 'Wishlist', path: '/account/wishlist', icon: Heart },
     { name: 'Reviews', path: '/account/reviews', icon: Star },
   ];

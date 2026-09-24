@@ -155,3 +155,28 @@ export const CareGuide = () => (
     ]}
   />
 );
+
+export const RefundPolicy = () => (
+  <PolicyPage
+    title="Refund Policy"
+    lastUpdated="September 24, 2026"
+    sections={[
+      {
+        title: 'Refund Process',
+        content: 'Once your return is received and inspected, we will send you an email to notify you that we have received your returned item. We will also notify you of the approval or rejection of your refund.',
+      },
+      {
+        title: 'Approved Refunds',
+        content: 'If you are approved, then your refund will be processed, and a credit will automatically be applied to your credit card or original method of payment, within 5-7 business days. Alternatively, you can add your Bank Details in your Account dashboard for direct bank transfers.',
+      },
+      {
+        title: 'Late or Missing Refunds',
+        content: 'If you haven’t received a refund yet, first check your bank account again. Then contact your credit card company, it may take some time before your refund is officially posted. If you’ve done all of this and you still have not received your refund yet, please contact us at care@maheshwarisilk.com.',
+      },
+      {
+        title: 'Sale Items',
+        content: 'Only regular priced items may be refunded, unfortunately, sale items cannot be refunded.',
+      },
+    ]}
+  />
+);

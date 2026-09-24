@@ -1,32 +1,76 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
+import api from '../../../../services/api';
 
 export const SilkWeaveMegaMenu = () => {
+  const [categories, setCategories] = useState<any[]>([]);
+  const [weaves, setWeaves] = useState<string[]>([]);
+  const [navBanner, setNavBanner] = useState<any>(null);
+
+  useEffect(() => {
+    // Fetch categories for "Silk Types" (we can skip the first few if needed, but we'll just slice a different part or use all)
+    api.get('/categories').then(res => {
+      // Reversing or slicing differently so it looks varied if there are few categories
+      setCategories(res.data.data.slice(0, 8).reverse()); 
+    }).catch(console.error);
+
+    // Fetch dynamic weaves from products
+    api.get('/products/filters').then(res => {
+      if (res.data.data && res.data.data.weave) {
+        setWeaves(res.data.data.weave.slice(0, 5));
+      }
+    }).catch(console.error);
+
+    // Fetch NAV_SILK_WEAVES banner
+    api.get('/banners?position=NAV_SILK_WEAVES').then(res => {
+      if (res.data.data && res.data.data.length > 0) {
+        setNavBanner(res.data.data[0]);
+      }
+    }).catch(console.error);
+  }, []);
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-10 flex gap-12">
       <div className="flex-1 grid grid-cols-3 gap-8">
         <div>
           <h3 className="font-serif text-sm text-primary tracking-widest uppercase mb-6">Silk Types</h3>
           <ul className="space-y-4">
-            {['Pure Silk', 'Banarasi', 'Kanjivaram', 'Tussar', 'Chanderi', 'Mysore Silk'].map((item) => (
-              <li key={item}>
-                <Link to={`/shop?category=${item.toLowerCase().replace(/\s+/g, '-')}`} className="text-sm text-secondary hover:text-accent transition-colors">
-                  {item}
+            {categories.length > 0 ? categories.map((cat) => (
+              <li key={cat._id}>
+                <Link to={`/shop?category=${cat.slug}`} className="text-sm text-secondary hover:text-accent transition-colors">
+                  {cat.name}
                 </Link>
               </li>
-            ))}
+            )) : (
+              ['Pure Silk', 'Banarasi', 'Kanjivaram', 'Tussar', 'Chanderi', 'Mysore Silk'].map((item) => (
+                <li key={item}>
+                  <Link to={`/shop?category=${item.toLowerCase().replace(/\s+/g, '-')}`} className="text-sm text-secondary hover:text-accent transition-colors">
+                    {item}
+                  </Link>
+                </li>
+              ))
+            )}
           </ul>
         </div>
         <div>
           <h3 className="font-serif text-sm text-primary tracking-widest uppercase mb-6">Weaves</h3>
           <ul className="space-y-4">
-            {['Handloom', 'Handwoven', 'Zari', 'Jamdani', 'Traditional Weaves'].map((item) => (
+            {weaves.length > 0 ? weaves.map((item) => (
               <li key={item}>
-                <Link to={`/shop?weave=${item.toLowerCase().replace(/\s+/g, '-')}`} className="text-sm text-secondary hover:text-accent transition-colors">
+                <Link to={`/shop?weave=${encodeURIComponent(item)}`} className="text-sm text-secondary hover:text-accent transition-colors capitalize">
                   {item}
                 </Link>
               </li>
-            ))}
+            )) : (
+              ['Handloom', 'Handwoven', 'Zari', 'Jamdani', 'Traditional Weaves'].map((item) => (
+                <li key={item}>
+                  <Link to={`/shop?weave=${item.toLowerCase().replace(/\s+/g, '-')}`} className="text-sm text-secondary hover:text-accent transition-colors">
+                    {item}
+                  </Link>
+                </li>
+              ))
+            )}
           </ul>
         </div>
         <div>
@@ -46,14 +90,14 @@ export const SilkWeaveMegaMenu = () => {
       <div className="w-80 flex flex-col group relative overflow-hidden bg-supporting/20">
         <div className="absolute inset-0 bg-primary/5 group-hover:bg-primary/0 transition-colors duration-500 z-10" />
         <img 
-          src="https://images.unsplash.com/photo-1595777457583-95e059d581b8?q=80&w=600&auto=format&fit=crop" 
-          alt="Silk Craftsmanship" 
+          src={navBanner?.image || "https://images.unsplash.com/photo-1595777457583-95e059d581b8?q=80&w=600&auto=format&fit=crop"} 
+          alt={navBanner?.title || "Silk Craftsmanship"} 
           className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
         />
         <div className="absolute inset-0 z-20 bg-gradient-to-t from-primary/80 to-transparent flex flex-col justify-end p-6">
-          <h4 className="text-white font-serif text-xl mb-2">The Art of Weaving</h4>
+          <h4 className="text-white font-serif text-xl mb-2">{navBanner?.title || "The Art of Weaving"}</h4>
           <p className="text-white/80 text-xs mb-4">Discover the centuries-old tradition behind our handloom silks.</p>
-          <Link to="/journal" className="text-accent text-sm tracking-widest uppercase font-medium flex items-center hover:text-white transition-colors">
+          <Link to={navBanner?.link || "/journal"} className="text-accent text-sm tracking-widest uppercase font-medium flex items-center hover:text-white transition-colors">
             Read Story <ArrowRight className="w-4 h-4 ml-2" />
           </Link>
         </div>

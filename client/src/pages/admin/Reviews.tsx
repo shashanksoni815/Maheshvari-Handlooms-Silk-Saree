@@ -74,7 +74,7 @@ export const Reviews = () => {
       header: 'Product',
       accessor: (row: any) => (
         <div className="flex items-center gap-3">
-          {row.product?.images?.[0] && <img src={row.product.images[0]} alt={row.product.name} className="w-10 h-10 object-cover rounded" />}
+          {row.product?.images?.[0]?.url && <img src={row.product.images[0].url} alt={row.product.name} className="w-10 h-10 object-cover rounded" />}
           <div className="font-semibold text-primary text-sm max-w-[150px] truncate" title={row.product?.name}>{row.product?.name || 'Unknown Product'}</div>
         </div>
       )

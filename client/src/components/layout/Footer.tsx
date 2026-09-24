@@ -34,6 +34,7 @@ export const Footer = () => {
               <li><Link to="/faq" className="hover:text-white transition">FAQ</Link></li>
               <li><Link to="/shipping-policy" className="hover:text-white transition">Shipping Policy</Link></li>
               <li><Link to="/cancellation-policy" className="hover:text-white transition">Returns & Exchanges</Link></li>
+              <li><Link to="/refund-policy" className="hover:text-white transition">Refund Policy</Link></li>
               <li><Link to="/care-guide" className="hover:text-white transition">Silk Care Guide</Link></li>
             </ul>
           </div>

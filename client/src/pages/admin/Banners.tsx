@@ -182,8 +182,11 @@ export const Banners = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Position *</label>
                   <select required value={formData.position} onChange={(e) => setFormData({...formData, position: e.target.value})} className="w-full px-3 py-2 border border-supporting rounded-sm focus:ring-1 focus:ring-accent">
                     <option value="HOME_HERO">HOME_HERO</option>
+                    <option value="HOME_FABRIC">HOME_FABRIC</option>
                     <option value="CATEGORY_TOP">CATEGORY_TOP</option>
                     <option value="PROMO_BANNER">PROMO_BANNER</option>
+                    <option value="NAV_MENU">NAV_MENU</option>
+                    <option value="NAV_SILK_WEAVES">NAV_SILK_WEAVES</option>
                   </select>
                 </div>
                 <div>

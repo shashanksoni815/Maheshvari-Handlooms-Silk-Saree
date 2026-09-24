@@ -74,7 +74,7 @@ export const Inventory = () => {
       accessor: (row: any) => (
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 rounded-sm bg-supporting overflow-hidden flex-shrink-0">
-            {row.images && row.images[0] && <img src={row.images[0]} alt={row.name} className="w-full h-full object-cover" />}
+            {row.images && row.images[0]?.url && <img src={row.images[0].url} alt={row.name} className="w-full h-full object-cover" />}
           </div>
           <div>
             <div className="font-semibold text-primary">{row.name}</div>

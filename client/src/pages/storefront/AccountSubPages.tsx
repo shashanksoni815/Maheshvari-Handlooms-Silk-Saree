@@ -43,8 +43,22 @@ export const AccountProfile = () => {
 export const AccountOrders = () => {
   // Placeholder for Orders. In a real app, fetch from API.
   const mockOrders = [
-    { _id: 'ORD-10293', date: '2023-10-15', total: 24500, status: 'Delivered', items: 2 },
-    { _id: 'ORD-10294', date: '2023-11-02', total: 18000, status: 'Processing', items: 1 },
+    { 
+      _id: 'ORD-10293', 
+      date: '2023-10-15', 
+      total: 24500, 
+      status: 'Delivered', 
+      items: 2,
+      delivery: { courier: 'BlueDart', trackingNumber: 'BD123456789IN' }
+    },
+    { 
+      _id: 'ORD-10294', 
+      date: '2023-11-02', 
+      total: 18000, 
+      status: 'Processing', 
+      items: 1,
+      delivery: null
+    },
   ];
 
   if (mockOrders.length === 0) {
@@ -78,7 +92,14 @@ export const AccountOrders = () => {
           <tbody>
             {mockOrders.map(order => (
               <tr key={order._id} className="border-b border-supporting/50 hover:bg-supporting/5 transition-colors">
-                <td className="py-4 pr-4 font-medium text-primary">{order._id}</td>
+                <td className="py-4 pr-4 font-medium text-primary">
+                  {order._id}
+                  {order.delivery && (
+                    <div className="text-[10px] text-muted mt-1 uppercase tracking-widest">
+                      {order.delivery.courier} - {order.delivery.trackingNumber}
+                    </div>
+                  )}
+                </td>
                 <td className="py-4 px-4 text-secondary">{order.date}</td>
                 <td className="py-4 px-4">
                   <span className={`px-3 py-1 text-xs font-bold uppercase tracking-wider ${
@@ -104,9 +125,71 @@ export const AccountOrders = () => {
 
 export const AccountOrderDetails = () => {
   return (
+    <div className="bg-white p-6 md:p-10 border border-supporting shadow-sm space-y-8">
+      <div className="border-b border-supporting pb-4 flex justify-between items-end">
+        <div>
+          <h2 className="text-2xl font-serif text-primary mb-2">Order #ORD-10293</h2>
+          <p className="text-sm text-secondary font-medium">Placed on October 15, 2023</p>
+        </div>
+        <span className="px-3 py-1 text-xs font-bold uppercase tracking-wider bg-green-100 text-green-800">
+          Delivered
+        </span>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div>
+          <h3 className="text-sm uppercase tracking-widest text-primary font-bold mb-4">Delivery Service</h3>
+          <div className="bg-supporting/10 p-4 border border-supporting">
+            <p className="text-sm text-secondary mb-1"><span className="font-bold text-primary">Courier:</span> BlueDart Express</p>
+            <p className="text-sm text-secondary mb-3"><span className="font-bold text-primary">Tracking Number:</span> BD123456789IN</p>
+            <a href="#" className="text-xs font-bold uppercase tracking-widest text-accent hover:underline">Track Package &rarr;</a>
+          </div>
+        </div>
+
+        <div>
+          <h3 className="text-sm uppercase tracking-widest text-primary font-bold mb-4">Payment Route</h3>
+          <div className="bg-supporting/10 p-4 border border-supporting">
+            <p className="text-sm text-secondary mb-1"><span className="font-bold text-primary">Method:</span> Razorpay (Credit Card)</p>
+            <p className="text-sm text-secondary mb-1"><span className="font-bold text-primary">Transaction ID:</span> pay_Lxyz123abc</p>
+            <p className="text-sm text-secondary"><span className="font-bold text-primary">Status:</span> Paid successfully</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const AccountBankDetails = () => {
+  return (
     <div className="bg-white p-6 md:p-10 border border-supporting shadow-sm">
-      <h2 className="text-2xl font-serif text-primary mb-8 border-b border-supporting pb-4">Order Details</h2>
-      <p className="text-secondary">Order details will be displayed here.</p>
+      <h2 className="text-2xl font-serif text-primary mb-8 border-b border-supporting pb-4">Bank Details for Refunds</h2>
+      <p className="text-sm text-secondary mb-6">Add your bank account details securely to receive fast refunds for returned items.</p>
+      
+      <form className="space-y-6 max-w-lg">
+        <div>
+          <label className="block text-xs uppercase tracking-widest text-primary font-bold mb-2">Account Holder Name</label>
+          <input type="text" className="w-full px-4 py-3 border border-supporting bg-white focus:ring-1 focus:ring-accent outline-none transition-shadow" placeholder="As per bank records" />
+        </div>
+        <div>
+          <label className="block text-xs uppercase tracking-widest text-primary font-bold mb-2">Bank Name</label>
+          <input type="text" className="w-full px-4 py-3 border border-supporting bg-white focus:ring-1 focus:ring-accent outline-none transition-shadow" placeholder="e.g. HDFC Bank" />
+        </div>
+        <div>
+          <label className="block text-xs uppercase tracking-widest text-primary font-bold mb-2">Account Number</label>
+          <input type="password" placeholder="••••••••••••" className="w-full px-4 py-3 border border-supporting bg-white focus:ring-1 focus:ring-accent outline-none transition-shadow" />
+        </div>
+        <div>
+          <label className="block text-xs uppercase tracking-widest text-primary font-bold mb-2">Re-enter Account Number</label>
+          <input type="text" className="w-full px-4 py-3 border border-supporting bg-white focus:ring-1 focus:ring-accent outline-none transition-shadow" />
+        </div>
+        <div>
+          <label className="block text-xs uppercase tracking-widest text-primary font-bold mb-2">IFSC Code</label>
+          <input type="text" className="w-full px-4 py-3 border border-supporting bg-white focus:ring-1 focus:ring-accent outline-none transition-shadow uppercase" placeholder="HDFC0001234" />
+        </div>
+        <button type="button" className="bg-primary text-white hover:bg-primary-light px-8 py-3 text-xs uppercase font-bold tracking-widest transition-colors w-full sm:w-auto mt-4">
+          Save Bank Details
+        </button>
+      </form>
     </div>
   );
 };
