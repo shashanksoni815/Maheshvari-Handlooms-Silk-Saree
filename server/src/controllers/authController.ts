@@ -2,8 +2,11 @@ import { Request, Response, NextFunction } from 'express';
 import User from '../models/User';
 import generateToken from '../utils/generateToken';
 import bcrypt from 'bcrypt';
+import crypto from 'crypto';
+import jwt from 'jsonwebtoken';
 import { ApiError } from '../utils/apiError';
 import { ApiResponse } from '../utils/apiResponse';
+import sendEmail from '../utils/emailService';
 
 export const register = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -24,7 +27,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
       password: hashedPassword,
     });
 
-    const { accessToken, refreshToken } = generateToken(user._id as string, user.role);
+    const { accessToken, refreshToken } = generateToken((user._id as any).toString(), user.role);
 
     user.refreshToken = refreshToken;
     await user.save();
@@ -72,7 +75,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
       return next(new ApiError(401, 'Invalid credentials'));
     }
 
-    const { accessToken, refreshToken } = generateToken(user._id as string, user.role);
+    const { accessToken, refreshToken } = generateToken((user._id as any).toString(), user.role);
 
     user.refreshToken = refreshToken;
     await user.save();
@@ -109,7 +112,7 @@ export const logout = async (req: Request, res: Response, next: NextFunction) =>
     if (refreshToken) {
       const user = await User.findOne({ refreshToken });
       if (user) {
-        user.refreshToken = undefined;
+        user.refreshToken = undefined as any;
         await user.save();
       }
     }
@@ -144,7 +147,7 @@ export const refresh = async (req: Request, res: Response, next: NextFunction) =
       return next(new ApiError(401, 'Invalid refresh token'));
     }
 
-    const tokens = generateToken(user._id as string, user.role);
+    const tokens = generateToken((user._id as any).toString(), user.role);
 
     user.refreshToken = tokens.refreshToken;
     await user.save();
@@ -164,5 +167,92 @@ export const refresh = async (req: Request, res: Response, next: NextFunction) =
     res.status(200).json(new ApiResponse('Token refreshed', { accessToken: tokens.accessToken }));
   } catch (error) {
     return next(new ApiError(401, 'Invalid or expired refresh token'));
+  }
+};
+
+export const forgotPassword = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const user = await User.findOne({ email: req.body.email });
+    if (!user) {
+      return next(new ApiError(404, 'There is no user with that email'));
+    }
+
+    // Generate reset token
+    const resetToken = crypto.randomBytes(20).toString('hex');
+    
+    // Hash token and set to resetPasswordToken field
+    user.resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+    user.resetPasswordExpire = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    await user.save();
+
+    // Create reset url
+    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/resetpassword/${resetToken}`;
+
+    const message = `
+      <h1>You have requested a password reset</h1>
+      <p>Please go to this link to reset your password:</p>
+      <a href=${resetUrl} clicktracking=off>${resetUrl}</a>
+    `;
+
+    try {
+      await sendEmail({
+        email: user.email,
+        subject: 'Password Reset Request',
+        html: message,
+      });
+
+      res.status(200).json(new ApiResponse('Email sent', {}));
+    } catch (error) {
+      user.resetPasswordToken = undefined as any;
+      user.resetPasswordExpire = undefined as any;
+      await user.save();
+      return next(new ApiError(500, 'Email could not be sent'));
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const resetPassword = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    // Get hashed token
+    const resetPasswordToken = crypto
+      .createHash('sha256')
+      .update(req.params.resettoken as string)
+      .digest('hex');
+
+    const user = await User.findOne({
+      resetPasswordToken,
+      resetPasswordExpire: { $gt: new Date() },
+    });
+
+    if (!user) {
+      return next(new ApiError(400, 'Invalid or expired token'));
+    }
+
+    // Set new password
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(req.body.password, salt);
+    user.resetPasswordToken = undefined as any;
+    user.resetPasswordExpire = undefined as any;
+
+    await user.save();
+
+    // Send confirmation email
+    try {
+      await sendEmail({
+        email: user.email,
+        subject: 'Password Changed Successfully',
+        html: '<p>Your password has been successfully updated.</p>',
+      });
+    } catch (e) {
+      // Ignore if confirmation email fails
+      console.log('Confirmation email failed', e);
+    }
+
+    res.status(200).json(new ApiResponse('Password updated successfully', {}));
+  } catch (error) {
+    next(error);
   }
 };

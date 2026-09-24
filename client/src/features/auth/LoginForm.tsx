@@ -99,7 +99,7 @@ export const LoginForm = () => {
             <div>
               <div className="flex justify-between items-center mb-2">
                 <label className="block text-xs uppercase tracking-widest font-medium text-secondary">Password</label>
-                <a href="#" className="text-xs text-accent hover:underline">Forgot password?</a>
+                <Link to="/forgotpassword" className="text-xs text-accent hover:underline">Forgot password?</Link>
               </div>
               <input
                 {...register('password')}

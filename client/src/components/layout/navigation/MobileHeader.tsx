@@ -25,8 +25,8 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({ onMenuClick, onSearc
       </div>
 
       <div className="flex-1 flex justify-center">
-        <Link to="/" className="text-xl md:text-2xl font-serif text-primary tracking-wide font-bold">
-          MAHESHWARI
+        <Link to="/">
+          <img src="/logo.png" alt="Maheshwari Silk" className="h-10 md:h-12 w-auto object-contain" />
         </Link>
       </div>
 

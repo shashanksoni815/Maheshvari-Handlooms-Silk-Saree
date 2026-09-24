@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { Order } from '../models/Order';
+import Order from '../models/Order';
 import { ApiError } from '../utils/apiError';
 import { ApiResponse } from '../utils/apiResponse';
 
@@ -131,3 +131,43 @@ export const updateOrderToDelivered = async (req: Request, res: Response, next: 
   }
 };
 
+// @desc    Cancel order (by user)
+// @route   PUT /api/v1/orders/:id/cancel
+// @access  Private
+export const cancelOrder = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const order = await Order.findById(req.params.id);
+
+    if (!order) {
+      return next(new ApiError(404, 'Order not found'));
+    }
+
+    if (order.user._id.toString() !== req.user._id.toString()) {
+      return next(new ApiError(403, 'Not authorized to cancel this order'));
+    }
+
+    if (!['PENDING', 'CONFIRMED', 'PROCESSING'].includes(order.status)) {
+      return next(new ApiError(400, 'Order cannot be cancelled at this stage. Please contact support.'));
+    }
+
+    order.status = 'CANCELLED';
+    
+    if (order.paymentInfo.status === 'COMPLETED') {
+      order.isRefunded = true;
+      order.paymentInfo.status = 'REFUNDED';
+      order.refundDetails = {
+        amount: order.pricing.total,
+        reason: 'User cancelled order',
+        refundedAt: new Date(),
+        refundedBy: req.user._id as any,
+      };
+    }
+
+    const updatedOrder = await order.save();
+
+    res.status(200).json(new ApiResponse('Order cancelled successfully', updatedOrder));
+  } catch (error) {
+    console.error('Cancel Order Error:', error);
+    next(new ApiError(500, 'Error cancelling order'));
+  }
+};

@@ -111,28 +111,28 @@ export const Shop = () => {
   return (
     <div className="bg-background min-h-screen">
       {/* Editorial Header */}
-      <div className="bg-supporting/10 border-b border-supporting/30 pt-16 pb-12 px-4 sm:px-6 lg:px-8 mb-8 text-center">
-        <h1 className="text-4xl md:text-5xl font-serif text-primary tracking-wide mb-4">
+      <div className="bg-supporting/10 border-b border-supporting/30 pt-12 pb-10 md:pt-16 md:pb-12 px-4 sm:px-6 lg:px-8 mb-6 md:mb-8 text-center">
+        <h1 className="text-3xl md:text-5xl font-serif text-primary tracking-wide mb-3 md:mb-4">
           {categorySlug ? categorySlug.replace(/-/g, ' ').toUpperCase() : 'SHOP ALL'}
         </h1>
-        <p className="text-secondary/80 max-w-2xl mx-auto font-serif italic text-lg">
+        <p className="text-secondary/80 max-w-2xl mx-auto font-serif italic text-sm md:text-lg">
           "Discover timeless Indian craftsmanship woven into every thread."
         </p>
       </div>
 
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pb-20">
         {/* Controls Bar */}
-        <div className="flex justify-between items-center py-4 border-b border-supporting mb-8 lg:mb-12">
-          <p className="text-secondary text-sm font-medium tracking-wide">
+        <div className="flex justify-between items-center py-4 border-b border-supporting mb-6 lg:mb-12">
+          <p className="text-secondary text-xs md:text-sm font-medium tracking-wide">
             {isLoading ? 'Loading...' : `${total} Products`}
           </p>
           
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 md:gap-4">
             <button 
-              className="lg:hidden flex items-center text-xs font-bold tracking-widest uppercase text-primary border border-supporting px-4 py-2 hover:bg-supporting/20 transition-colors"
+              className="lg:hidden flex items-center text-[10px] md:text-xs font-bold tracking-widest uppercase text-primary border border-supporting px-3 py-2 md:px-4 md:py-2 hover:bg-supporting/20 transition-colors"
               onClick={() => setIsMobileFilterOpen(true)}
             >
-              <Filter className="w-4 h-4 mr-2" />
+              <Filter className="w-3 h-3 md:w-4 md:h-4 mr-1.5 md:mr-2" />
               Filters
             </button>
             
@@ -140,13 +140,13 @@ export const Shop = () => {
               <select 
                 value={sortOption}
                 onChange={(e) => setSortOption(e.target.value)}
-                className="appearance-none bg-transparent text-xs font-bold tracking-widest uppercase text-primary border border-supporting px-4 py-2 pr-8 hover:bg-supporting/20 transition-colors focus:outline-none cursor-pointer"
+                className="appearance-none bg-transparent text-[10px] md:text-xs font-bold tracking-widest uppercase text-primary border border-supporting px-3 py-2 md:px-4 md:py-2 pr-6 md:pr-8 hover:bg-supporting/20 transition-colors focus:outline-none cursor-pointer"
               >
                 <option value="newest">Newest First</option>
                 <option value="price_asc">Price: Low to High</option>
                 <option value="price_desc">Price: High to Low</option>
               </select>
-              <ChevronDown className="w-4 h-4 text-primary absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <ChevronDown className="w-3 h-3 md:w-4 md:h-4 text-primary absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
           </div>
         </div>
@@ -189,7 +189,7 @@ export const Shop = () => {
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-x-2 gap-y-6 sm:gap-x-4 sm:gap-y-10 lg:gap-x-6 lg:gap-y-12">
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-10 sm:gap-x-6 sm:gap-y-12 lg:gap-x-8 lg:gap-y-16">
                 {products.map((product: any) => (
                   <ProductCard key={product._id} product={product} />
                 ))}

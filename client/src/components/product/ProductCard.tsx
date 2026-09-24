@@ -80,47 +80,48 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({ product, on
 
   return (
     <div 
-      className="group relative flex flex-col bg-white rounded-sm overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-supporting/30 border border-supporting/50"
+      className="group relative flex flex-col bg-transparent overflow-hidden transition-all duration-300"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Product Image Section */}
-      <Link to={`/product/${product._id}`} className="relative aspect-[3/4] overflow-hidden bg-supporting/20">
-        <img
-          src={product.images[0]?.url}
-          alt={product.name}
-          className={`w-full h-full object-cover object-top transition-transform duration-700 ${isHovered ? 'scale-105' : 'scale-100'}`}
-        />
-        
-        {/* Secondary Image on Hover (if available) */}
-        {product.images[1] && (
+      <div className="relative aspect-[3/4] overflow-hidden bg-supporting/10">
+        <Link to={`/product/${product._id}`} className="block w-full h-full">
           <img
-            src={product.images[1]?.url}
-            alt={`${product.name} detail`}
-            className={`absolute inset-0 w-full h-full object-cover object-top transition-opacity duration-700 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
+            src={product.images[0]?.url}
+            alt={product.name}
+            className={`w-full h-full object-cover object-top transition-transform duration-700 ${isHovered ? 'scale-105' : 'scale-100'}`}
           />
-        )}
+          
+          {/* Secondary Image on Hover (if available) */}
+          {product.images[1] && (
+            <img
+              src={product.images[1]?.url}
+              alt={`${product.name} detail`}
+              className={`absolute inset-0 w-full h-full object-cover object-top transition-opacity duration-700 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
+            />
+          )}
+        </Link>
 
         {/* Badges */}
-        <div className="absolute top-3 left-3 flex flex-col gap-2">
+        <div className="absolute top-2 left-2 lg:top-3 lg:left-3 flex flex-col gap-1.5 lg:gap-2 pointer-events-none">
           {outOfStock ? (
-            <span className="bg-gray-800 text-white text-[10px] font-bold tracking-widest uppercase px-2 py-1 shadow-sm">
+            <span className="bg-white/90 text-primary text-[8px] lg:text-[9px] font-bold tracking-widest uppercase px-1.5 py-1 lg:px-3 lg:py-1.5 shadow-sm backdrop-blur-sm">
               Sold Out
             </span>
           ) : (
             <>
               {product.isBestseller && (
-                <span className="bg-accent text-white text-[10px] font-bold tracking-widest uppercase px-2 py-1 shadow-sm">
+                <span className="bg-white/90 text-primary text-[8px] lg:text-[9px] font-bold tracking-widest uppercase px-1.5 py-1 lg:px-3 lg:py-1.5 shadow-sm backdrop-blur-sm">
                   Bestseller
                 </span>
               )}
               {product.isNewArrival && (
-                <span className="bg-primary text-white text-[10px] font-bold tracking-widest uppercase px-2 py-1 shadow-sm">
+                <span className="bg-primary/90 text-white text-[8px] lg:text-[9px] font-bold tracking-widest uppercase px-1.5 py-1 lg:px-3 lg:py-1.5 shadow-sm backdrop-blur-sm">
                   New
                 </span>
               )}
               {discount > 0 && (
-                <span className="bg-burgundy text-white text-[10px] font-bold tracking-widest uppercase px-2 py-1 shadow-sm">
+                <span className="bg-burgundy/90 text-white text-[8px] lg:text-[9px] font-bold tracking-widest uppercase px-1.5 py-1 lg:px-3 lg:py-1.5 shadow-sm backdrop-blur-sm">
                   {discount}% Off
                 </span>
               )}
@@ -131,67 +132,46 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({ product, on
         {/* Wishlist Button */}
         <button
           onClick={handleWishlist}
-          className="absolute top-3 right-3 p-2 bg-white/80 backdrop-blur-sm rounded-full shadow-sm hover:bg-white transition-colors z-10"
+          className="absolute top-3 right-3 p-2 bg-white/50 backdrop-blur-md rounded-full shadow-sm hover:bg-white transition-colors z-10"
           aria-label="Toggle Wishlist"
         >
-          <Heart className={`w-4 h-4 transition-colors ${isWishlisted ? 'fill-burgundy text-burgundy' : 'text-secondary hover:text-burgundy'}`} />
+          <Heart className={`w-3.5 h-3.5 transition-colors ${isWishlisted ? 'fill-burgundy text-burgundy' : 'text-primary hover:text-burgundy'}`} />
         </button>
 
-        {/* Quick View Button (Desktop only on hover) */}
-        <div className={`absolute inset-x-0 bottom-0 p-4 transition-all duration-300 transform hidden lg:block ${isHovered ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}>
+        {/* Quick Add overlay on hover */}
+        <div className={`absolute inset-x-4 bottom-4 transition-all duration-300 transform hidden lg:flex gap-2 ${isHovered ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}>
           <button 
-            onClick={handleQuickView}
-            className="w-full bg-white/90 backdrop-blur-md text-primary font-medium text-xs tracking-widest uppercase py-3 shadow-md hover:bg-primary hover:text-white transition-colors flex items-center justify-center gap-2"
+            onClick={handleAddToCart}
+            disabled={outOfStock}
+            className={`flex-1 bg-white/95 backdrop-blur-md text-primary font-bold text-[10px] tracking-widest uppercase py-3 shadow-md transition-colors flex items-center justify-center gap-2 ${
+              outOfStock ? 'opacity-50 cursor-not-allowed' : 'hover:bg-primary hover:text-white'
+            }`}
           >
-            <Eye className="w-4 h-4" /> Quick View
+            {outOfStock ? 'Out of Stock' : 'Add to Cart'}
           </button>
         </div>
-      </Link>
+      </div>
 
-      {/* Product Details Section */}
-      <div className="p-4 md:p-5 flex flex-col flex-grow">
+      <div className="flex flex-col flex-grow mt-3 lg:mt-4">
         <Link to={`/product/${product._id}`} className="block flex-grow">
-          {product.category?.name && (
-            <p className="text-[10px] uppercase tracking-widest text-muted font-semibold mb-1.5">{product.category.name}</p>
-          )}
-          <h3 className="font-serif text-primary text-lg md:text-xl mb-2 line-clamp-2 leading-snug group-hover:text-accent transition-colors">
+          <p className="text-[8px] lg:text-[9px] uppercase tracking-[0.2em] text-muted font-bold mb-1.5 lg:mb-2">
+            {product.category?.name || 'MAHESHWARI SILK'}
+          </p>
+          <h3 className="font-serif text-primary text-sm lg:text-base mb-1.5 lg:mb-2 line-clamp-2 leading-relaxed group-hover:text-accent transition-colors">
             {product.name}
           </h3>
           
-          <div className="flex items-center gap-1 mb-3">
-            {[1, 2, 3, 4, 5].map((star) => (
-              <Star 
-                key={star} 
-                className={`w-3.5 h-3.5 ${star <= (product.rating || 0) ? 'fill-accent text-accent' : 'text-gray-300'}`} 
-              />
-            ))}
-            <span className="text-xs text-muted ml-1">({product.numReviews || 0})</span>
-          </div>
-
-          <div className="flex items-center gap-3 mb-4">
-            <span className="font-medium text-primary text-lg">₹{product.price.toLocaleString('en-IN')}</span>
+          <div className="flex items-center gap-2">
+            <span className="font-medium text-secondary text-xs lg:text-sm">₹{product.price.toLocaleString('en-IN')}</span>
             {product.mrp > product.price && (
-              <span className="text-sm text-muted line-through">₹{product.mrp.toLocaleString('en-IN')}</span>
+              <span className="text-[10px] lg:text-xs text-muted line-through">₹{product.mrp.toLocaleString('en-IN')}</span>
             )}
           </div>
         </Link>
-
-        {/* Add to Cart Button */}
-        <button
-          onClick={handleAddToCart}
-          disabled={outOfStock}
-          className={`w-full py-3 text-xs font-semibold tracking-widest uppercase flex items-center justify-center gap-2 transition-all duration-300 ${
-            outOfStock 
-              ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-              : 'bg-primary text-white hover:bg-primary/90 hover:shadow-md'
-          }`}
-        >
-          <ShoppingBag className="w-4 h-4" />
-          {outOfStock ? 'Out of Stock' : 'Add to Cart'}
-        </button>
       </div>
     </div>
   );
 });
 
 ProductCard.displayName = 'ProductCard';
+

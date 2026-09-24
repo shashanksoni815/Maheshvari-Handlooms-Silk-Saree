@@ -98,6 +98,27 @@ export const Checkout = () => {
       const rzpOrderRes = await api.post(`/payments/create-order/${orderId}`);
       const { amount, id: razorpayOrderId, currency } = rzpOrderRes.data.data;
 
+      const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY_ID;
+
+      // Mock payment flow for testing without valid Razorpay credentials
+      if (!razorpayKey || razorpayKey === 'YOUR_KEY_ID' || razorpayKey === 'rzp_test_your_key_id') {
+        try {
+          await api.post('/payments/verify', {
+            razorpayOrderId: razorpayOrderId,
+            razorpayPaymentId: `mock_payment_${Date.now()}`,
+            razorpaySignature: 'mock_signature',
+            orderId: orderId
+          });
+          
+          clearCart();
+          navigate(`/order-success/${orderId}`);
+        } catch (err) {
+          alert('Payment verification failed. Please contact support.');
+        }
+        setIsProcessing(false);
+        return;
+      }
+
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'YOUR_KEY_ID', 
         amount: amount.toString(),

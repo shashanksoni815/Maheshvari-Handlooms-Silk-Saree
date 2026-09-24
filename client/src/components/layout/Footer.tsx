@@ -8,7 +8,9 @@ export const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
           {/* Brand & Mission */}
           <div className="col-span-1 lg:col-span-1">
-            <h3 className="text-2xl font-serif tracking-widest mb-6">MAHESHWARI</h3>
+            <Link to="/" className="inline-block mb-6">
+              <img src="/footer-logo.jpg" alt="Maheshwari Silk" className="h-24 md:h-32 w-auto object-contain rounded-md" />
+            </Link>
             <p className="text-sm text-gray-300 leading-relaxed mb-6">
               Curators of authentic Indian silk heritage. Handwoven masterpieces crafted by master artisans for the modern connoisseur.
             </p>
@@ -33,7 +35,7 @@ export const Footer = () => {
               <li><Link to="/contact" className="hover:text-white transition">Contact Us</Link></li>
               <li><Link to="/faq" className="hover:text-white transition">FAQ</Link></li>
               <li><Link to="/shipping-policy" className="hover:text-white transition">Shipping Policy</Link></li>
-              <li><Link to="/cancellation-policy" className="hover:text-white transition">Returns & Exchanges</Link></li>
+              <li><Link to="/cancellation-policy" className="hover:text-white transition">Cancellation & Returns</Link></li>
               <li><Link to="/refund-policy" className="hover:text-white transition">Refund Policy</Link></li>
               <li><Link to="/care-guide" className="hover:text-white transition">Silk Care Guide</Link></li>
             </ul>

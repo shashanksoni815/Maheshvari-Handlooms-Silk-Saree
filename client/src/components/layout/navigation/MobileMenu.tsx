@@ -3,6 +3,8 @@ import { X, ChevronDown, ChevronRight, User, Heart, LogOut } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '../../../store/authStore';
+import { useQuery } from '@tanstack/react-query';
+import api from '../../../services/api';
 
 interface MobileMenuProps {
   isOpen: boolean;
@@ -13,6 +15,17 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose }) => {
   const [openAccordion, setOpenAccordion] = useState<string | null>(null);
   const { isAuthenticated, logout } = useAuthStore();
   const navigate = useNavigate();
+
+  // Fetch dynamic data for menus
+  const { data: catData } = useQuery({ queryKey: ['mobile-nav-categories'], queryFn: async () => (await api.get('/categories')).data });
+  const { data: colData } = useQuery({ queryKey: ['mobile-nav-collections'], queryFn: async () => (await api.get('/collections')).data });
+  const { data: filterData } = useQuery({ queryKey: ['mobile-nav-filters'], queryFn: async () => (await api.get('/products/config/filters')).data });
+  const { data: blogData } = useQuery({ queryKey: ['mobile-nav-blogs'], queryFn: async () => (await api.get('/blogs')).data });
+
+  const categories = catData?.data || [];
+  const collections = colData?.data || [];
+  const weaves = filterData?.data?.weave || ['Handloom', 'Handwoven', 'Zari', 'Jamdani'];
+  const blogs = blogData?.data || [];
 
   useEffect(() => {
     if (isOpen) {
@@ -39,50 +52,24 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose }) => {
     {
       name: 'Sarees',
       id: 'sarees',
-      submenus: [
-        { name: 'Silk Sarees', path: '/shop?category=silk-sarees' },
-        { name: 'Banarasi', path: '/shop?category=banarasi-silk' },
-        { name: 'Kanjivaram', path: '/shop?category=kanjivaram-silk' },
-        { name: 'Tussar', path: '/shop?category=tussar-silk' },
-        { name: 'Chanderi', path: '/shop?category=chanderi-silk' },
-        { name: 'Cotton', path: '/shop?category=cotton' },
-        { name: 'Organza', path: '/shop?category=organza' },
-      ],
+      submenus: categories.slice(0, 6).map((c: any) => ({ name: c.name, path: `/shop?category=${c.slug}` })),
     },
     {
       name: 'Collections',
       id: 'collections',
-      submenus: [
-        { name: 'Wedding', path: '/shop?collection=wedding' },
-        { name: 'Bridal', path: '/shop?collection=bridal' },
-        { name: 'Festive', path: '/shop?collection=festive' },
-        { name: 'New Arrivals', path: '/shop?collection=new-arrivals' },
-        { name: 'Best Sellers', path: '/shop?collection=best-sellers' },
-        { name: 'Handloom', path: '/shop?collection=handloom' },
-      ],
+      submenus: collections.slice(0, 6).map((c: any) => ({ name: c.name, path: `/shop?collection=${c.slug}` })),
     },
     {
       name: 'Silk & Weaves',
       id: 'silk-weaves',
-      submenus: [
-        { name: 'Pure Silk', path: '/shop?category=pure-silk' },
-        { name: 'Handloom', path: '/shop?weave=handloom' },
-        { name: 'Handwoven', path: '/shop?weave=handwoven' },
-        { name: 'Zari', path: '/shop?weave=zari' },
-        { name: 'Jamdani', path: '/shop?weave=jamdani' },
-      ],
+      submenus: weaves.slice(0, 6).map((w: string) => ({ name: w, path: `/shop?weave=${w.toLowerCase().replace(/ /g, '-')}` })),
     },
-    { name: 'Wedding', path: '/shop?collection=wedding' },
     {
       name: 'Journal',
       id: 'journal',
       submenus: [
         { name: 'Featured Stories', path: '/journal' },
-        { name: 'Style & Inspiration', path: '/journal?category=style' },
-        { name: 'Silk Guide', path: '/journal?category=silk-guide' },
-        { name: 'Wedding Stories', path: '/journal?category=wedding' },
-        { name: 'Craft & Heritage', path: '/journal?category=craft' },
-        { name: 'Saree Care', path: '/journal?category=care' },
+        ...blogs.slice(0, 5).map((b: any) => ({ name: b.title, path: `/journal/${b.slug}` }))
       ],
     },
     { name: 'About', path: '/about-us' },
@@ -113,7 +100,7 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose }) => {
           >
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-supporting shrink-0 h-[68px]">
-              <span className="font-serif text-xl text-primary font-bold tracking-wide">MAHESHWARI</span>
+              <img src="/logo.png" alt="Maheshwari Silk" className="h-10 w-auto object-contain" />
               <button onClick={onClose} className="p-2 text-secondary hover:text-primary transition-colors" aria-label="Close menu">
                 <X className="w-6 h-6" strokeWidth={1.5} />
               </button>

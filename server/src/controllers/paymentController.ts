@@ -2,9 +2,10 @@ import { Request, Response, NextFunction } from 'express';
 // @ts-ignore
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
-import { Order } from '../models/Order';
+import Order from '../models/Order';
 import { ApiError } from '../utils/apiError';
 import { ApiResponse } from '../utils/apiResponse';
+import sendEmail from '../utils/emailService';
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID || 'dummy_key_id',
@@ -23,7 +24,7 @@ export const createRazorpayOrder = async (req: Request, res: Response, next: Nex
     }
 
     // Check authorization
-    if (order.user.toString() !== req.user._id.toString()) {
+    if (order.user.toString() !== (req as any).user._id.toString()) {
       return next(new ApiError(403, 'Not authorized'));
     }
 
@@ -33,7 +34,18 @@ export const createRazorpayOrder = async (req: Request, res: Response, next: Nex
       receipt: `receipt_order_${order._id}`,
     };
 
-    const razorpayOrder = await razorpay.orders.create(options);
+    let razorpayOrder;
+    if (process.env.RAZORPAY_KEY_ID === 'rzp_test_your_key_id' || !process.env.RAZORPAY_KEY_ID) {
+      razorpayOrder = {
+        id: `mock_order_${Date.now()}`,
+        amount: options.amount,
+        currency: options.currency,
+        receipt: options.receipt,
+        status: 'created'
+      };
+    } else {
+      razorpayOrder = await razorpay.orders.create(options);
+    }
     
     res.status(200).json(new ApiResponse('Razorpay order created', razorpayOrder));
   } catch (error) {
@@ -49,7 +61,7 @@ export const verifyPayment = async (req: Request, res: Response, next: NextFunct
   try {
     const { razorpayOrderId, razorpayPaymentId, razorpaySignature, orderId } = req.body;
 
-    const order = await Order.findById(orderId);
+    const order = await Order.findById(orderId).populate('user', 'email firstName');
 
     if (!order) {
       return next(new ApiError(404, 'Order not found'));
@@ -57,12 +69,22 @@ export const verifyPayment = async (req: Request, res: Response, next: NextFunct
 
     // Create signature for verification
     const secret = process.env.RAZORPAY_KEY_SECRET || 'dummy_key_secret';
-    const generatedSignature = crypto
-      .createHmac('sha256', secret)
-      .update(`${razorpayOrderId}|${razorpayPaymentId}`)
-      .digest('hex');
+    
+    let isSignatureValid = false;
 
-    if (generatedSignature === razorpaySignature) {
+    if (process.env.RAZORPAY_KEY_ID === 'rzp_test_your_key_id' || !process.env.RAZORPAY_KEY_ID) {
+      if (razorpaySignature === 'mock_signature') {
+        isSignatureValid = true;
+      }
+    } else {
+      const generatedSignature = crypto
+        .createHmac('sha256', secret)
+        .update(`${razorpayOrderId}|${razorpayPaymentId}`)
+        .digest('hex');
+      isSignatureValid = generatedSignature === razorpaySignature;
+    }
+
+    if (isSignatureValid) {
       // Payment is successful
       order.paymentInfo.status = 'COMPLETED';
       order.paymentInfo.razorpayPaymentId = razorpayPaymentId;
@@ -70,6 +92,34 @@ export const verifyPayment = async (req: Request, res: Response, next: NextFunct
       order.status = 'CONFIRMED';
 
       const updatedOrder = await order.save();
+
+      // Send Invoice Email
+      try {
+        const invoiceHtml = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+            <h2 style="color: #6C2237;">Payment Successful!</h2>
+            <p>Dear ${(order.user as any).firstName},</p>
+            <p>Thank you for your purchase from Maheshwari Handloom Silk Saree. Your payment for Order <strong>#${order.orderNumber}</strong> has been successfully processed.</p>
+            
+            <div style="background-color: #f9f9f9; padding: 20px; border-radius: 5px; margin: 20px 0;">
+              <h3 style="margin-top: 0; border-bottom: 1px solid #ddd; padding-bottom: 10px;">Order Summary</h3>
+              <p><strong>Total Amount:</strong> ₹${order.pricing.total.toLocaleString('en-IN')}</p>
+              <p><strong>Payment Method:</strong> ${order.paymentInfo.method}</p>
+              <p><strong>Payment Status:</strong> COMPLETED</p>
+            </div>
+            
+            <p>We are now processing your order and will notify you once it's shipped.</p>
+            <p>Best Regards,<br/>Maheshwari Handloom Silk Saree Team</p>
+          </div>
+        `;
+        await sendEmail({
+          email: (order.user as any).email,
+          subject: `Invoice for Order #${order.orderNumber}`,
+          html: invoiceHtml,
+        });
+      } catch (err) {
+        console.error('Invoice email failed to send:', err);
+      }
 
       res.status(200).json(new ApiResponse('Payment verified successfully', updatedOrder));
     } else {

@@ -46,8 +46,8 @@ export const LuxuryHeader = () => {
             
             {/* Logo */}
             <div className="w-[200px] flex-shrink-0">
-              <Link to="/" className="text-3xl font-serif text-primary tracking-wider font-bold">
-                MAHESHWARI
+              <Link to="/">
+                <img src="/logo.png" alt="Maheshwari Silk Handloom Saree" className="h-14 lg:h-16 w-auto object-contain" />
               </Link>
             </div>
 

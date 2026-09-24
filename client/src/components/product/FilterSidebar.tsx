@@ -31,13 +31,13 @@ const FilterSection = ({ title, options, selected, onChange }: { title: string, 
   const [isOpen, setIsOpen] = useState(true);
   
   return (
-    <div className="border-b border-supporting py-4">
+    <div className="border-b border-supporting/50 py-5">
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex justify-between items-center py-2 text-primary font-serif tracking-wide focus:outline-none"
+        className="w-full flex justify-between items-center py-1 text-primary text-xs uppercase tracking-widest font-bold focus:outline-none"
       >
         <span>{title}</span>
-        {isOpen ? <ChevronUp className="w-4 h-4 text-secondary" /> : <ChevronDown className="w-4 h-4 text-secondary" />}
+        {isOpen ? <ChevronUp className="w-3 h-3 text-secondary" /> : <ChevronDown className="w-3 h-3 text-secondary" />}
       </button>
       <AnimatePresence>
         {isOpen && (
@@ -47,15 +47,15 @@ const FilterSection = ({ title, options, selected, onChange }: { title: string, 
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden"
           >
-            <div className="pt-3 pb-2 space-y-2.5 max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-supporting scrollbar-track-transparent">
+            <div className="pt-4 pb-2 space-y-3 max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-supporting scrollbar-track-transparent">
               {options.map((opt) => (
                 <label key={opt} className="flex items-center cursor-pointer group">
-                  <div className={`w-4 h-4 border flex items-center justify-center transition-colors ${
+                  <div className={`w-3.5 h-3.5 border flex items-center justify-center transition-colors ${
                     selected.includes(opt) 
                       ? 'bg-primary border-primary' 
                       : 'border-secondary/40 group-hover:border-primary'
                   }`}>
-                    {selected.includes(opt) && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                    {selected.includes(opt) && <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />}
                   </div>
                   <input 
                     type="checkbox" 
@@ -63,7 +63,7 @@ const FilterSection = ({ title, options, selected, onChange }: { title: string, 
                     checked={selected.includes(opt)}
                     onChange={() => onChange(opt)}
                   />
-                  <span className={`ml-3 text-sm transition-colors ${selected.includes(opt) ? 'text-primary font-medium' : 'text-secondary group-hover:text-primary'}`}>
+                  <span className={`ml-3 text-xs transition-colors ${selected.includes(opt) ? 'text-primary font-medium' : 'text-secondary group-hover:text-primary'}`}>
                     {opt}
                   </span>
                 </label>
@@ -103,30 +103,30 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({ filters, setFilter
   };
 
   const SidebarContent = () => (
-    <div className="flex flex-col h-full bg-white">
-      <div className="flex items-center justify-between py-4 md:py-0 border-b md:border-none border-supporting px-4 md:px-0">
-        <h2 className="text-xl font-serif text-primary">Filters</h2>
+    <div className="flex flex-col h-full bg-background">
+      <div className="flex items-center justify-between py-5 md:py-0 border-b md:border-none border-supporting px-5 md:px-0 mb-4">
+        <h2 className="text-sm uppercase tracking-widest font-bold text-primary">Filters</h2>
         <div className="flex items-center gap-4">
-          <button onClick={clearFilters} className="text-xs uppercase tracking-widest text-secondary hover:text-primary underline-offset-4 hover:underline">
+          <button onClick={clearFilters} className="text-[10px] uppercase tracking-widest text-secondary hover:text-primary underline-offset-4 hover:underline">
             Clear All
           </button>
           <button className="md:hidden p-1 text-secondary" onClick={() => setIsMobileOpen(false)}>
-            <X className="w-6 h-6" />
+            <X className="w-5 h-5" />
           </button>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 md:px-0 mt-4 md:mt-6 pb-20 md:pb-0">
+      <div className="flex-1 overflow-y-auto px-5 md:px-0 mt-2 md:mt-0 pb-20 md:pb-0">
         
         {/* Availability */}
-        <div className="border-b border-supporting py-4">
+        <div className="border-y border-supporting/50 py-5">
           <label className="flex items-center cursor-pointer group">
-            <div className={`w-4 h-4 border flex items-center justify-center transition-colors ${
+            <div className={`w-3.5 h-3.5 border flex items-center justify-center transition-colors ${
               filters.inStock 
                 ? 'bg-primary border-primary' 
                 : 'border-secondary/40 group-hover:border-primary'
             }`}>
-              {filters.inStock && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+              {filters.inStock && <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />}
             </div>
             <input 
               type="checkbox" 
@@ -134,7 +134,7 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({ filters, setFilter
               checked={filters.inStock}
               onChange={(e) => setFilters(prev => ({ ...prev, inStock: e.target.checked }))}
             />
-            <span className={`ml-3 text-sm font-serif tracking-wide transition-colors ${filters.inStock ? 'text-primary font-medium' : 'text-secondary group-hover:text-primary'}`}>
+            <span className={`ml-3 text-xs uppercase tracking-widest transition-colors ${filters.inStock ? 'text-primary font-bold' : 'text-secondary font-medium group-hover:text-primary'}`}>
               In Stock Only
             </span>
           </label>

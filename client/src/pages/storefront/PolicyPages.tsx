@@ -62,24 +62,24 @@ export const ShippingPolicy = () => (
 
 export const CancellationPolicy = () => (
   <PolicyPage
-    title="Returns & Exchanges"
-    lastUpdated="September 1, 2026"
+    title="Cancellation & Returns"
+    lastUpdated="September 24, 2026"
     sections={[
       {
-        title: 'Our Commitment',
-        content: 'Every saree at Maheshwari Silk is carefully handcrafted and quality-inspected before dispatch. We stand fully behind the authenticity and quality of every piece we ship.',
+        title: 'Order Cancellations',
+        content: 'You can cancel your order at any time before it is shipped. To cancel, simply navigate to your Account > Orders and click "Cancel Order". If your order has already been processed or shipped, it cannot be cancelled.',
+      },
+      {
+        title: 'Refunds for Cancelled Orders',
+        content: 'If you cancel an order that has already been paid for, your refund will be initiated immediately. Please note that it may take 5-7 business days for the refund to reflect in your original payment method.',
       },
       {
         title: 'Return Eligibility',
-        content: 'We accept returns within 7 days of delivery for unused, unwashed items in their original packaging. The product must be in the exact condition in which it was received, with all original tags intact.',
-      },
-      {
-        title: 'Non-Returnable Items',
-        content: 'Custom-ordered sarees, pieces that have been blouse-stitched, and items purchased during sale events are not eligible for return or exchange.',
+        content: 'If you receive an item and wish to return it, we accept returns within 7 days of delivery for unused, unwashed items in their original packaging. The product must be in the exact condition in which it was received, with all original tags intact.',
       },
       {
         title: 'How to Initiate a Return',
-        content: 'Email us at care@maheshwarisilk.com with your order number and reason for return. Our team will respond within 24 hours with instructions for the return shipment. Once we receive and inspect the item, your refund will be processed within 5-7 business days.',
+        content: 'Email us at care@maheshwarisilk.com with your order number and reason for return. Our team will respond within 24 hours with instructions for the return shipment. Once we receive and inspect the item, your refund will be processed.',
       },
     ]}
   />

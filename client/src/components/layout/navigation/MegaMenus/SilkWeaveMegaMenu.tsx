@@ -16,7 +16,7 @@ export const SilkWeaveMegaMenu = () => {
     }).catch(console.error);
 
     // Fetch dynamic weaves from products
-    api.get('/products/filters').then(res => {
+    api.get('/products/config/filters').then(res => {
       if (res.data.data && res.data.data.weave) {
         setWeaves(res.data.data.weave.slice(0, 5));
       }

@@ -30,6 +30,8 @@ const Settings = React.lazy(() => import('./pages/admin/Settings').then(m => ({ 
 
 const LoginForm = React.lazy(() => import('./features/auth/LoginForm').then(m => ({ default: m.LoginForm })));
 const RegisterForm = React.lazy(() => import('./features/auth/RegisterForm').then(m => ({ default: m.RegisterForm })));
+const ForgotPassword = React.lazy(() => import('./pages/auth/ForgotPassword'));
+const ResetPassword = React.lazy(() => import('./pages/auth/ResetPassword'));
 const Home = React.lazy(() => import('./pages/storefront/Home').then(m => ({ default: m.Home })));
 const Shop = React.lazy(() => import('./pages/storefront/Shop').then(m => ({ default: m.Shop })));
 const ProductDetail = React.lazy(() => import('./pages/storefront/ProductDetail').then(m => ({ default: m.ProductDetail })));
@@ -59,7 +61,6 @@ const AccountOrderDetails = React.lazy(() => import('./pages/storefront/AccountS
 const AccountAddresses = React.lazy(() => import('./pages/storefront/AccountSubPages').then(m => ({ default: m.AccountAddresses })));
 const AccountWishlist = React.lazy(() => import('./pages/storefront/AccountSubPages').then(m => ({ default: m.AccountWishlist })));
 const AccountReviews = React.lazy(() => import('./pages/storefront/AccountSubPages').then(m => ({ default: m.AccountReviews })));
-const AccountBankDetails = React.lazy(() => import('./pages/storefront/AccountSubPages').then(m => ({ default: m.AccountBankDetails })));
 
 const App = () => {
   return (
@@ -87,7 +88,6 @@ const App = () => {
               <Route path="orders" element={<AccountOrders />} />
               <Route path="orders/:orderId" element={<AccountOrderDetails />} />
               <Route path="addresses" element={<AccountAddresses />} />
-              <Route path="bank-details" element={<AccountBankDetails />} />
               <Route path="wishlist" element={<AccountWishlist />} />
               <Route path="reviews" element={<AccountReviews />} />
             </Route>
@@ -111,6 +111,8 @@ const App = () => {
         {/* Auth Routes */}
         <Route path="/login" element={<LoginForm />} />
         <Route path="/register" element={<RegisterForm />} />
+        <Route path="/forgotpassword" element={<ForgotPassword />} />
+        <Route path="/resetpassword/:resettoken" element={<ResetPassword />} />
 
         {/* Admin Routes */}
         <Route path="/admin" element={<AdminRoute />}>
