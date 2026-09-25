@@ -137,7 +137,7 @@ export const deleteProduct = async (req: Request, res: Response, next: NextFunct
 
 export const getProductFilters = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const query = { status: 'PUBLISHED' };
+    const query = { status: 'PUBLISHED' as const };
     
     // Run distinct queries in parallel for better performance
     const [fabrics, silkTypes, weaves, colors] = await Promise.all([

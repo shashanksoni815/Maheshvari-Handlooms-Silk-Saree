@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { AuthRequest } from '../middleware/auth';
 import Order from '../models/Order';
 import { ApiError } from '../utils/apiError';
 import { ApiResponse } from '../utils/apiResponse';
@@ -11,7 +12,7 @@ const generateOrderNumber = () => {
 // @desc    Create new order
 // @route   POST /api/v1/orders
 // @access  Private
-export const createOrder = async (req: Request, res: Response, next: NextFunction) => {
+export const createOrder = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const {
       items,
@@ -49,7 +50,7 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
 // @desc    Get order by ID
 // @route   GET /api/v1/orders/:id
 // @access  Private
-export const getOrderById = async (req: Request, res: Response, next: NextFunction) => {
+export const getOrderById = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const order = await Order.findById(req.params.id).populate(
       'user',
@@ -75,7 +76,7 @@ export const getOrderById = async (req: Request, res: Response, next: NextFuncti
 // @desc    Get logged in user orders
 // @route   GET /api/v1/orders/myorders
 // @access  Private
-export const getMyOrders = async (req: Request, res: Response, next: NextFunction) => {
+export const getMyOrders = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const orders = await Order.find({ user: req.user._id }).sort({ createdAt: -1 });
 
@@ -134,7 +135,7 @@ export const updateOrderToDelivered = async (req: Request, res: Response, next: 
 // @desc    Cancel order (by user)
 // @route   PUT /api/v1/orders/:id/cancel
 // @access  Private
-export const cancelOrder = async (req: Request, res: Response, next: NextFunction) => {
+export const cancelOrder = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const order = await Order.findById(req.params.id);
 
