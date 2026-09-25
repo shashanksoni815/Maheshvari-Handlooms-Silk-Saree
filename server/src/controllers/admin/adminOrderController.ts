@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { AuthRequest } from '../../middleware/auth';
 import Order from '../../models/Order';
 import { ApiError } from '../../utils/apiError';
 import { ApiResponse } from '../../utils/apiResponse';
@@ -18,7 +19,7 @@ export const getAdminOrderById = async (req: Request, res: Response, next: NextF
   try {
     const order = await Order.findById(req.params.id)
       .populate('user', 'firstName lastName email')
-      .populate('orderItems.product', 'name sku images price');
+      .populate('items.product', 'name sku images price');
 
     if (!order) {
       return next(new ApiError(404, 'Order not found'));
@@ -45,16 +46,16 @@ export const updateOrderStatus = async (req: Request, res: Response, next: NextF
       return next(new ApiError(404, 'Order not found'));
     }
 
-    // Update legacy booleans if needed, or better, add a status field to the Order schema.
-    // The prompt explicitly asks to "Update Order Status (Pending, Processing, Shipped, Delivered, Cancelled)"
-    // Let's assume the Order schema has a 'status' field, or we will add one. For now, we will map to isDelivered for legacy compatibility if 'Delivered' is chosen.
-    if (status === 'Delivered' && !order.isDelivered) {
-      order.isDelivered = true;
-      order.deliveredAt = new Date();
+    // We update the order status
+    // Map legacy 'Shipped', 'Delivered', etc to uppercase equivalent if needed, but assuming frontend sends correct casing or we just force it.
+    const normalizedStatus = status.toUpperCase();
+    const validStatuses = ['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'OUT_FOR_DELIVERY', 'DELIVERED', 'CANCELLED'];
+    if (!validStatuses.includes(normalizedStatus)) {
+      return next(new ApiError(400, 'Invalid status'));
     }
     
     // We update the order status
-    order.status = status;
+    order.status = normalizedStatus as any;
     await order.save();
 
     res.status(200).json(new ApiResponse('Order status updated', order));
@@ -63,7 +64,7 @@ export const updateOrderStatus = async (req: Request, res: Response, next: NextF
   }
 };
 
-export const issueRefund = async (req: Request, res: Response, next: NextFunction) => {
+export const issueRefund = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const { amount, reason } = req.body;
     
@@ -72,7 +73,7 @@ export const issueRefund = async (req: Request, res: Response, next: NextFunctio
       return next(new ApiError(404, 'Order not found'));
     }
 
-    if (!order.isPaid) {
+    if (order.paymentInfo?.status !== 'COMPLETED') {
       return next(new ApiError(400, 'Cannot refund an unpaid order'));
     }
 

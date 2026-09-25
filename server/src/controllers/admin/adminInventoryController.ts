@@ -1,10 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
+import { AuthRequest } from '../../middleware/auth';
 import Product from '../../models/Product';
 import InventoryTransaction from '../../models/InventoryTransaction';
 import { ApiError } from '../../utils/apiError';
 import { ApiResponse } from '../../utils/apiResponse';
 
-export const adjustInventory = async (req: Request, res: Response, next: NextFunction) => {
+export const adjustInventory = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const { productId, sku, type, quantity, reason } = req.body;
     const adminId = req.user?._id;

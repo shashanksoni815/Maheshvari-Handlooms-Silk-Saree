@@ -35,7 +35,7 @@ export const LoginForm = () => {
     try {
       const response = await api.post('/auth/login', data);
       const userData = response.data.data;
-      setUser(userData);
+      setUser(userData, userData.accessToken);
       
       if (userData.role === 'ADMIN' || userData.role === 'SUPER_ADMIN') {
         navigate('/admin');

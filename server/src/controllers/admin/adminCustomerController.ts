@@ -28,8 +28,8 @@ export const getCustomerById = async (req: Request, res: Response, next: NextFun
     const orders = await Order.find({ user: customer._id }).sort({ createdAt: -1 }).limit(10);
     
     // Total spent
-    const allOrders = await Order.find({ user: customer._id, isPaid: true });
-    const totalSpent = allOrders.reduce((acc, curr) => acc + (curr.pricing?.total || curr.total || 0), 0);
+    const allOrders = await Order.find({ user: customer._id, 'paymentInfo.status': 'COMPLETED' });
+    const totalSpent = allOrders.reduce((acc, curr) => acc + (curr.pricing?.total || 0), 0);
 
     res.status(200).json(new ApiResponse('Customer fetched', { customer, orders, stats: { totalSpent, orderCount: allOrders.length } }));
   } catch (error) {

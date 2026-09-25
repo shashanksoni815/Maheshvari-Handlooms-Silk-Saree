@@ -9,9 +9,24 @@ const api = axios.create({
 // Let's assume the access token is returned in login and stored in memory for now, or just rely on the backend cookie.
 // The backend is setting `accessToken` as an HttpOnly cookie, so we don't strictly need to send it via header unless we choose to.
 // But the user requested robust auth, so keeping it in memory via zustand and sending as Bearer token is a standard approach, with HttpOnly refresh token.
-// Wait, the backend in `authController.ts` sets both `accessToken` and `refreshToken` as HttpOnly cookies.
-// AND it returns the accessToken in the JSON payload.
-// Let's rely on the HttpOnly cookies for maximum security, but we might need interceptors for token refresh if requests fail with 401.
+// The backend in authController.ts sets both accessToken and refreshToken as HttpOnly cookies.
+// However, cross-origin requests on localhost might block cookies unless SameSite=None is used.
+// To ensure reliable authentication, we will use the Bearer token stored in the zustand store.
+
+api.interceptors.request.use((config) => {
+  const storageStr = localStorage.getItem('auth-storage');
+  if (storageStr) {
+    try {
+      const storage = JSON.parse(storageStr);
+      if (storage?.state?.token) {
+        config.headers.Authorization = `Bearer ${storage.state.token}`;
+      }
+    } catch (e) {
+      // Ignore parse error
+    }
+  }
+  return config;
+});
 
 api.interceptors.response.use(
   (response) => response,
@@ -20,11 +35,25 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry && originalRequest.url !== '/auth/refresh') {
       originalRequest._retry = true;
       try {
-        await axios.post(
+        const refreshResponse = await axios.post(
           `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1'}/auth/refresh`,
           {},
           { withCredentials: true }
         );
+        
+        // Update the token in storage
+        const storageStr = localStorage.getItem('auth-storage');
+        if (storageStr) {
+          try {
+            const storage = JSON.parse(storageStr);
+            if (storage?.state) {
+              storage.state.token = refreshResponse.data.data.accessToken;
+              localStorage.setItem('auth-storage', JSON.stringify(storage));
+              originalRequest.headers.Authorization = `Bearer ${refreshResponse.data.data.accessToken}`;
+            }
+          } catch (e) {}
+        }
+        
         return api(originalRequest);
       } catch (refreshError) {
         // Redirect to login or clear auth store

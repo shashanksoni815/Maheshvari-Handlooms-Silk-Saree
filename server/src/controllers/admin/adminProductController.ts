@@ -40,7 +40,7 @@ export const deleteAdminProduct = async (req: Request, res: Response, next: Next
     // Use soft delete by setting status to archived, or just remove if that's safe.
     // The prompt says: "Do NOT blindly hard-delete products that have historical orders. Use Archive / Soft Delete"
     // Since we don't know yet if there are orders, let's just mark it as archived for safety.
-    product.status = 'archived';
+    product.status = 'ARCHIVED';
     await product.save();
 
     res.status(200).json(new ApiResponse('Product archived successfully', {}));
