@@ -21,7 +21,7 @@ api.interceptors.request.use((config) => {
       if (storage?.state?.token) {
         config.headers.Authorization = `Bearer ${storage.state.token}`;
       }
-    } catch (e) {
+    } catch {
       // Ignore parse error
     }
   }
@@ -51,7 +51,7 @@ api.interceptors.response.use(
               localStorage.setItem('auth-storage', JSON.stringify(storage));
               originalRequest.headers.Authorization = `Bearer ${refreshResponse.data.data.accessToken}`;
             }
-          } catch (e) {}
+          } catch {}
         }
         
         return api(originalRequest);

@@ -7,10 +7,6 @@ export const Reports = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
 
-  useEffect(() => {
-    fetchStats();
-  }, []);
-
   const fetchStats = async () => {
     setIsLoading(true);
     try {
@@ -23,6 +19,10 @@ export const Reports = () => {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
 
   if (isLoading) {
     return <div className="p-12 text-center animate-pulse">Loading reports...</div>;
