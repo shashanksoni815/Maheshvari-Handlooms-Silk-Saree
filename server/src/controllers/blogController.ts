@@ -9,7 +9,18 @@ const excerptFromContent = (value: string) => value.replace(/<[^>]*>/g, '').repl
 // @access  Public
 export const getBlogs = async (req: Request, res: Response) => {
   try {
-    const blogs = await Blog.find({ isPublished: true }).sort({ createdAt: -1 });
+    const filter: Record<string, unknown> = { isPublished: true };
+    const search = typeof req.query.search === 'string' ? req.query.search.trim() : '';
+    if (search) {
+      const escaped = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      filter.$or = [
+        { title: { $regex: escaped, $options: 'i' } },
+        { excerpt: { $regex: escaped, $options: 'i' } },
+        { content: { $regex: escaped, $options: 'i' } },
+        { category: { $regex: escaped, $options: 'i' } },
+      ];
+    }
+    const blogs = await Blog.find(filter).sort({ createdAt: -1 });
     res.status(200).json({ success: true, data: blogs });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });

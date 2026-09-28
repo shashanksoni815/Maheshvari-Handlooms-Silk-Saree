@@ -16,7 +16,7 @@ router.get('/', getProductReviews);
 router.post('/', protect, createProductReview);
 
 // Admin routes
-router.delete('/:reviewId', protect, authorize('admin'), deleteReview);
-router.put('/:reviewId/status', protect, authorize('admin'), updateReviewStatus);
+router.delete('/:reviewId', protect, authorize('ADMIN', 'SUPER_ADMIN'), deleteReview);
+router.put('/:reviewId/status', protect, authorize('ADMIN', 'SUPER_ADMIN'), updateReviewStatus);
 
 export default router;

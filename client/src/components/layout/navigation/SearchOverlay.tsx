@@ -45,8 +45,10 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
     queryKey: ['search-products', debouncedTerm],
     queryFn: async () => {
       if (!debouncedTerm.trim()) return null;
-      const res = await api.get(`/products?search=${debouncedTerm}`);
-      return res.data?.data?.slice(0, 3); // Limit to 3 for suggestions
+      const params = new URLSearchParams({ search: debouncedTerm, limit: '3' });
+      const res = await api.get(`/products?${params.toString()}`);
+      const products = res.data?.data?.products || res.data?.data || [];
+      return products.slice(0, 3);
     },
     enabled: !!debouncedTerm.trim(),
   });
@@ -153,7 +155,7 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
                           >
                             <div className="aspect-3/4 bg-supporting/20 overflow-hidden">
                               <img 
-                                src={product.images?.[0] || "https://images.unsplash.com/photo-1610189013994-46323c91db10?auto=format&fit=crop&w=400&q=80"} 
+                                src={product.images?.[0]?.url || product.images?.[0] || "https://images.unsplash.com/photo-1610189013994-46323c91db10?auto=format&fit=crop&w=400&q=80"} 
                                 alt={product.name}
                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                               />

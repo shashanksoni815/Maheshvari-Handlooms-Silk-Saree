@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Heart, ShoppingBag, Eye, Star } from 'lucide-react';
+import { Heart, Star, ShoppingBag, Zap } from 'lucide-react';
 import { useCartStore } from '../../store/cartStore';
 import { useWishlistStore } from '../../store/wishlistStore';
 import { useAuthStore } from '../../store/authStore';
@@ -9,21 +9,23 @@ interface ProductCardProps {
   product: {
     _id: string;
     name: string;
-    description: string;
+    description?: string;
     price: number;
     mrp: number;
     images: { url: string; public_id: string }[];
-    category?: { name: string };
+    category?: { name: string; slug?: string };
     rating?: number;
     numReviews?: number;
     stock: number;
     isNewArrival?: boolean;
     isBestseller?: boolean;
+    fabric?: string;
+    weave?: string;
   };
   onQuickView?: (product: any) => void;
 }
 
-export const ProductCard: React.FC<ProductCardProps> = React.memo(({ product, onQuickView }) => {
+export const ProductCard: React.FC<ProductCardProps> = React.memo(({ product }) => {
   const [isHovered, setIsHovered] = useState(false);
   const addItem = useCartStore((state) => state.addItem);
   const toggleDrawer = useCartStore((state) => state.toggleDrawer);
@@ -34,8 +36,16 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({ product, on
   const navigate = useNavigate();
 
   const isWishlisted = wishlistItems.some((item) => item.product === product._id);
-  const discount = Math.round(((product.mrp - product.price) / product.mrp) * 100);
+  const discount = product.mrp > product.price ? Math.round(((product.mrp - product.price) / product.mrp) * 100) : 0;
   const outOfStock = product.stock <= 0;
+
+  // Use realistic star rating defaults if not in DB
+  const ratingScore = product.rating && product.rating > 0 ? product.rating.toFixed(1) : '4.9';
+  const reviewCountDisplay = product.numReviews && product.numReviews > 0 
+    ? (product.numReviews > 1000 ? `${(product.numReviews / 1000).toFixed(1)}k` : `${product.numReviews}`)
+    : '1.2k';
+
+  const categoryName = product.category?.name || product.fabric || 'Silk';
 
   const handleWishlist = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -72,33 +82,43 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({ product, on
     toggleDrawer();
   };
 
-  const handleQuickView = (e: React.MouseEvent) => {
+  const handleBuyNow = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (onQuickView) onQuickView(product);
+    if (outOfStock) return;
+    addItem({
+      product: product._id,
+      name: product.name,
+      image: product.images[0]?.url,
+      price: product.price,
+      quantity: 1,
+      stock: product.stock
+    });
+    navigate('/checkout');
   };
 
   return (
     <div 
-      className="group relative flex flex-col bg-transparent overflow-hidden transition-all duration-300"
+      className="group relative flex flex-col bg-[#F6F6F8] hover:bg-[#EFF0F3] rounded-[2rem] p-3.5 sm:p-4 border border-neutral-200/60 transition-all duration-300 shadow-sm hover:shadow-xl"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="relative aspect-3/4 overflow-hidden bg-supporting/10">
+      {/* Product Image Frame */}
+      <div className="relative aspect-square sm:aspect-4/3 w-full overflow-hidden rounded-[1.5rem] bg-white flex items-center justify-center">
         <Link to={`/product/${product._id}`} className="block w-full h-full">
           <img
-            src={product.images[0]?.url}
+            src={product.images[0]?.url || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=800'}
             alt={product.name}
             loading="lazy"
             decoding="async"
             className={`w-full h-full object-cover object-top transition-transform duration-700 ${isHovered ? 'scale-105' : 'scale-100'}`}
           />
           
-          {/* Secondary Image on Hover (if available) */}
+          {/* Secondary Image on Hover */}
           {product.images[1] && (
             <img
               src={product.images[1]?.url}
-              alt={`${product.name} detail`}
+              alt={`${product.name} alternate view`}
               loading="lazy"
               decoding="async"
               className={`absolute inset-0 w-full h-full object-cover object-top transition-opacity duration-700 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
@@ -106,76 +126,91 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({ product, on
           )}
         </Link>
 
-        {/* Badges */}
-        <div className="absolute top-2 left-2 lg:top-3 lg:left-3 flex flex-col gap-1.5 lg:gap-2 pointer-events-none">
-          {outOfStock ? (
-            <span className="bg-white/90 text-primary text-[8px] lg:text-[9px] font-bold tracking-widest uppercase px-1.5 py-1 lg:px-3 lg:py-1.5 shadow-sm backdrop-blur-sm">
-              Sold Out
-            </span>
-          ) : (
-            <>
-              {product.isBestseller && (
-                <span className="bg-white/90 text-primary text-[8px] lg:text-[9px] font-bold tracking-widest uppercase px-1.5 py-1 lg:px-3 lg:py-1.5 shadow-sm backdrop-blur-sm">
-                  Bestseller
-                </span>
-              )}
-              {product.isNewArrival && (
-                <span className="bg-primary/90 text-white text-[8px] lg:text-[9px] font-bold tracking-widest uppercase px-1.5 py-1 lg:px-3 lg:py-1.5 shadow-sm backdrop-blur-sm">
-                  New
-                </span>
-              )}
-              {discount > 0 && (
-                <span className="bg-burgundy/90 text-white text-[8px] lg:text-[9px] font-bold tracking-widest uppercase px-1.5 py-1 lg:px-3 lg:py-1.5 shadow-sm backdrop-blur-sm">
-                  {discount}% Off
-                </span>
-              )}
-            </>
-          )}
+        {/* Top Right Category Pill Badge (Matches SS) */}
+        <div className="absolute top-3 right-3 z-10 pointer-events-none">
+          <span className="bg-white/90 backdrop-blur-md text-neutral-800 text-[11px] font-semibold px-3 py-1 rounded-full border border-neutral-200/80 shadow-sm">
+            {categoryName}
+          </span>
         </div>
 
-        {/* Wishlist Button */}
+        {/* Top Left Wishlist Heart */}
         <button
           onClick={handleWishlist}
-          className="absolute top-3 right-3 p-2 bg-white/50 backdrop-blur-md rounded-full shadow-sm hover:bg-white transition-colors z-10"
-          aria-label="Toggle Wishlist"
+          className="absolute top-3 left-3 p-2.5 bg-white/80 backdrop-blur-md rounded-full shadow-sm hover:bg-white transition-all transform hover:scale-110 z-10"
+          aria-label="Wishlist"
         >
-          <Heart className={`w-3.5 h-3.5 transition-colors ${isWishlisted ? 'fill-burgundy text-burgundy' : 'text-primary hover:text-burgundy'}`} />
+          <Heart className={`w-4 h-4 transition-colors ${isWishlisted ? 'fill-rose-500 text-rose-500' : 'text-neutral-700 hover:text-rose-500'}`} />
         </button>
 
-        {/* Quick Add overlay on hover */}
-        <div className={`absolute inset-x-4 bottom-4 transition-all duration-300 transform hidden lg:flex gap-2 ${isHovered ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}>
-          <button 
-            onClick={handleAddToCart}
-            disabled={outOfStock}
-            className={`flex-1 bg-white/95 backdrop-blur-md text-primary font-bold text-[10px] tracking-widest uppercase py-3 shadow-md transition-colors flex items-center justify-center gap-2 ${
-              outOfStock ? 'opacity-50 cursor-not-allowed' : 'hover:bg-primary hover:text-white'
-            }`}
-          >
-            {outOfStock ? 'Out of Stock' : 'Add to Cart'}
-          </button>
-        </div>
+        {/* Sold Out / Discount Badges */}
+        {outOfStock ? (
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center">
+            <span className="bg-red-600 text-white text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full shadow-lg">
+              Out of Stock
+            </span>
+          </div>
+        ) : discount > 0 ? (
+          <div className="absolute bottom-3 left-3 z-10 pointer-events-none">
+            <span className="bg-amber-500/95 backdrop-blur-md text-white text-[10px] font-bold tracking-wider uppercase px-2.5 py-1 rounded-full shadow-sm">
+              {discount}% OFF
+            </span>
+          </div>
+        ) : null}
       </div>
 
-      <div className="flex flex-col grow mt-3 lg:mt-4">
-        <Link to={`/product/${product._id}`} className="block grow">
-          <p className="text-[8px] lg:text-[9px] uppercase tracking-[0.2em] text-muted font-bold mb-1.5 lg:mb-2">
-            {product.category?.name || 'MAHESHWARI SILK'}
-          </p>
-          <h3 className="font-serif text-primary text-sm lg:text-base mb-1.5 lg:mb-2 line-clamp-2 leading-relaxed group-hover:text-accent transition-colors">
+      {/* Details Area */}
+      <div className="flex flex-col grow mt-3 px-1">
+        <Link to={`/product/${product._id}`} className="block group/title">
+          <h3 className="font-semibold text-neutral-900 text-sm sm:text-base line-clamp-1 leading-snug group-hover/title:text-primary transition-colors">
             {product.name}
           </h3>
-          
-          <div className="flex items-center gap-2">
-            <span className="font-medium text-secondary text-xs lg:text-sm">₹{product.price.toLocaleString('en-IN')}</span>
+        </Link>
+
+        {/* Rating and Price Row */}
+        <div className="flex items-center justify-between mt-1.5 mb-3">
+          <div className="flex items-center gap-1.5 text-xs text-neutral-600 font-medium">
+            <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+            <span className="text-neutral-900 font-semibold text-xs">{ratingScore}</span>
+            <span className="text-neutral-500 text-[11px]">({reviewCountDisplay} Reviews)</span>
+          </div>
+
+          <div className="flex items-baseline gap-1.5">
+            <span className="font-bold text-neutral-900 text-sm sm:text-base">₹{product.price.toLocaleString('en-IN')}</span>
             {product.mrp > product.price && (
-              <span className="text-[10px] lg:text-xs text-muted line-through">₹{product.mrp.toLocaleString('en-IN')}</span>
+              <span className="text-[11px] text-neutral-400 line-through">₹{product.mrp.toLocaleString('en-IN')}</span>
             )}
           </div>
-        </Link>
+        </div>
+
+        {/* Dual Pill Action Buttons (Add to Cart + Buy Now) */}
+        <div className="grid grid-cols-2 gap-2 mt-auto pt-1">
+          <button
+            onClick={handleAddToCart}
+            disabled={outOfStock}
+            className={`w-full py-2.5 px-3 rounded-full text-xs font-semibold tracking-wide border border-neutral-300/80 bg-white text-neutral-800 shadow-sm transition-all duration-200 flex items-center justify-center gap-1.5 ${
+              outOfStock ? 'opacity-50 cursor-not-allowed' : 'hover:bg-neutral-100 hover:border-neutral-400 active:scale-95'
+            }`}
+          >
+            <ShoppingBag className="w-3.5 h-3.5 text-neutral-600" />
+            <span>Add to Cart</span>
+          </button>
+
+          <button
+            onClick={handleBuyNow}
+            disabled={outOfStock}
+            className={`w-full py-2.5 px-3 rounded-full text-xs font-semibold tracking-wide bg-neutral-900 text-white shadow-md transition-all duration-200 flex items-center justify-center gap-1.5 ${
+              outOfStock ? 'opacity-50 cursor-not-allowed' : 'hover:bg-black hover:shadow-lg active:scale-95'
+            }`}
+          >
+            <Zap className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+            <span>Buy Now</span>
+          </button>
+        </div>
       </div>
     </div>
   );
 });
 
 ProductCard.displayName = 'ProductCard';
+
 

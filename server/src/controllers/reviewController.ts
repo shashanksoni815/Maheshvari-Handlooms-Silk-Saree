@@ -10,8 +10,18 @@ import mongoose from 'mongoose';
 // @access  Private
 export const createProductReview = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { rating, title, description, images } = req.body;
-    const productId = req.params.productId;
+    const { rating, title, images } = req.body;
+    const description = req.body.description ?? req.body.comment;
+    const productId = req.params.productId || req.params.id;
+
+    if (!productId || !mongoose.Types.ObjectId.isValid(String(productId))) {
+      return next(new ApiError(400, 'Invalid product ID'));
+    }
+    if (!Number.isInteger(Number(rating)) || Number(rating) < 1 || Number(rating) > 5 ||
+        typeof title !== 'string' || title.trim().length < 3 ||
+        typeof description !== 'string' || description.trim().length < 10) {
+      return next(new ApiError(400, 'Provide a rating from 1 to 5, a title, and a review of at least 10 characters'));
+    }
 
     const product = await Product.findById(productId);
     if (!product) return next(new ApiError(404, 'Product not found'));
@@ -34,8 +44,8 @@ export const createProductReview = async (req: Request, res: Response, next: Nex
       product: productId as any,
       user: (req as any).user._id,
       rating: Number(rating),
-      title,
-      description,
+      title: title.trim(),
+      description: description.trim(),
       images,
       isVerifiedPurchase,
       isApproved: true // Auto approve for now

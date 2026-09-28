@@ -4,6 +4,9 @@ import { useQuery } from '@tanstack/react-query';
 import { Shield, Truck, RotateCcw, Star, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import api from '../../services/api';
+import { ProductCard } from '../../components/product/ProductCard';
+
+const EMPTY_BANNERS: any[] = [];
 
 export const Home = () => {
   const { data: homeData, isLoading } = useQuery({
@@ -42,7 +45,7 @@ export const Home = () => {
     },
   });
 
-  const heroBanners: any[] = homeData?.heroBanners || [];
+  const heroBanners: any[] = homeData?.heroBanners ?? EMPTY_BANNERS;
   const [activeHeroIndex, setActiveHeroIndex] = useState(0);
   const heroBanner = heroBanners[activeHeroIndex] || null;
 
@@ -50,7 +53,7 @@ export const Home = () => {
     if (heroBanners.length < 2) return;
     const timer = window.setInterval(() => {
       setActiveHeroIndex(index => (index + 1) % heroBanners.length);
-    }, 2000);
+    }, 1000);
     return () => window.clearInterval(timer);
   }, [heroBanners.length]);
 
@@ -257,32 +260,22 @@ export const Home = () => {
 
       {/* ─── NEW ARRIVALS ─── */}
       {newArrivals.length > 0 && (
-        <section className="py-16 px-4 bg-supporting/10">
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-10">
-              <h2 className="text-3xl font-serif text-primary">New Arrivals</h2>
-              <div className="w-12 h-px bg-accent mx-auto mt-4"></div>
+        <section className="py-20 px-4 sm:px-6 lg:px-8 bg-neutral-50/50">
+          <div className="max-w-[1440px] mx-auto">
+            <div className="text-center mb-12">
+              <span className="text-xs font-bold uppercase tracking-widest text-amber-600 bg-amber-50 px-3.5 py-1 rounded-full border border-amber-200/60 inline-block mb-2">Fresh In Store</span>
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-neutral-900">New Arrivals</h2>
+              <div className="w-16 h-0.5 bg-neutral-900 mx-auto mt-3 rounded-full"></div>
             </div>
             
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {newArrivals.map((product) => (
-                <Link key={product._id} to={`/product/${product.slug}`} className="group bg-white p-2 pb-4 border border-supporting/50 shadow-sm hover:shadow-md transition-shadow block">
-                  <div className="relative aspect-3/4 overflow-hidden mb-4 bg-supporting/20">
-                    {product.images && product.images[0] && (
-                      <img src={product.images[0].url} alt={product.name} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                    )}
-                    <div className="absolute top-2 left-2 bg-accent text-white text-[10px] px-2 py-0.5 uppercase tracking-wide">New</div>
-                  </div>
-                  <div className="text-center px-2">
-                    <h3 className="text-sm font-medium text-primary mb-1 truncate">{product.name}</h3>
-                    <p className="text-secondary text-sm">₹{product.price.toLocaleString('en-IN')}</p>
-                  </div>
-                </Link>
+                <ProductCard key={product._id} product={product} />
               ))}
             </div>
-            <div className="text-center mt-10">
-              <Link to="/shop" className="inline-block bg-primary text-white px-8 py-3 text-xs uppercase tracking-widest hover:bg-primary/90 transition-colors">
-                View All
+            <div className="text-center mt-12">
+              <Link to="/shop" className="inline-flex items-center gap-2 bg-neutral-900 text-white px-8 py-3.5 rounded-full text-xs font-semibold tracking-wider hover:bg-black transition-all shadow-md">
+                View All New Arrivals
               </Link>
             </div>
           </div>
@@ -291,53 +284,49 @@ export const Home = () => {
 
       {/* ─── SHOP BY COLLECTION ─── */}
       {collections.length > 0 && (
-        <section className="py-16 px-4 max-w-7xl mx-auto">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl font-serif text-primary">Shop By Collection</h2>
-            <div className="w-12 h-px bg-accent mx-auto mt-4"></div>
+        <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-[1440px] mx-auto">
+          <div className="text-center mb-12">
+            <span className="text-xs font-bold uppercase tracking-widest text-neutral-500 mb-2 block">Curated Themes</span>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-neutral-900">Shop By Collection</h2>
+            <div className="w-16 h-0.5 bg-neutral-900 mx-auto mt-3 rounded-full"></div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {collections.slice(0, 4).map((col, i) => (
-              <Link key={col._id || i} to={`/shop?collection=${col.slug}`} className="group relative aspect-square overflow-hidden border border-supporting/50 bg-supporting/10">
+              <Link key={col._id || i} to={`/shop?collection=${col.slug}`} className="group relative aspect-square rounded-3xl overflow-hidden border border-neutral-200/80 shadow-md">
                 {(col.bannerImage || col.image) && (
                   <img src={col.bannerImage || col.image} alt={col.name} loading="lazy" decoding="async" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                 )}
-                <div className="absolute inset-0 bg-black/40 group-hover:bg-black/50 transition-colors"></div>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <h3 className="text-white text-xl md:text-2xl font-serif text-center uppercase tracking-widest border border-white/50 px-4 py-2 backdrop-blur-sm">{col.name}</h3>
+                <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/30 to-transparent group-hover:bg-black/40 transition-colors"></div>
+                <div className="absolute inset-x-6 bottom-8 text-center">
+                  <h3 className="text-white text-xl sm:text-2xl font-bold tracking-tight drop-shadow-md">{col.name}</h3>
+                  <span className="inline-block mt-2 text-[11px] font-semibold text-white/90 bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/30 group-hover:bg-white group-hover:text-neutral-900 transition-all">
+                    Explore Collection →
+                  </span>
                 </div>
               </Link>
             ))}
           </div>
         </section>
-      )}      {/* ─── DEMANDING PRODUCTS ─── */}
+      )}
+
+      {/* ─── DEMANDING PRODUCTS ─── */}
       {demandingProducts.length > 0 && (
-        <section className="py-16 px-4 bg-white">
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-10">
-              <h2 className="text-3xl font-serif text-primary">Trending Now</h2>
-              <div className="w-12 h-px bg-accent mx-auto mt-4"></div>
+        <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white border-t border-neutral-200/80">
+          <div className="max-w-[1440px] mx-auto">
+            <div className="text-center mb-12">
+              <span className="text-xs font-bold uppercase tracking-widest text-rose-600 bg-rose-50 px-3.5 py-1 rounded-full border border-rose-200/60 inline-block mb-2">Most Loved</span>
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-neutral-900">Trending Now</h2>
+              <div className="w-16 h-0.5 bg-neutral-900 mx-auto mt-3 rounded-full"></div>
             </div>
             
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {demandingProducts.map((product) => (
-                <Link key={product._id} to={`/product/${product.slug}`} className="group bg-background p-2 pb-4 border border-supporting/50 shadow-sm hover:shadow-md transition-shadow block">
-                  <div className="relative aspect-3/4 overflow-hidden mb-4 bg-supporting/20">
-                    {product.images && product.images[0] && (
-                      <img src={product.images[0].url} alt={product.name} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                    )}
-                    <div className="absolute top-2 left-2 bg-amber-600 text-white text-[10px] px-2 py-0.5 uppercase tracking-wide">Trending</div>
-                  </div>
-                  <div className="text-center px-2">
-                    <h3 className="text-sm font-medium text-primary mb-1 truncate">{product.name}</h3>
-                    <p className="text-secondary text-sm">₹{product.price.toLocaleString('en-IN')}</p>
-                  </div>
-                </Link>
+                <ProductCard key={product._id} product={product} />
               ))}
             </div>
-             <div className="text-center mt-10">
-              <Link to="/shop" className="inline-block bg-transparent border border-primary text-primary px-8 py-3 text-xs uppercase tracking-widest hover:bg-primary hover:text-white transition-colors">
-                View All
+            <div className="text-center mt-12">
+              <Link to="/shop" className="inline-flex items-center gap-2 border border-neutral-300 text-neutral-900 bg-white px-8 py-3.5 rounded-full text-xs font-semibold tracking-wider hover:bg-neutral-900 hover:text-white transition-all shadow-sm">
+                Explore All Trending Sarees
               </Link>
             </div>
           </div>

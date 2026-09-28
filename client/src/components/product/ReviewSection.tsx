@@ -5,13 +5,14 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import api from '../../services/api';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 interface Review {
   _id: string;
   user: { firstName: string; lastName: string };
   rating: number;
   title: string;
-  comment: string;
+  description: string;
   createdAt: string;
 }
 
@@ -24,7 +25,7 @@ interface ReviewSectionProps {
 const reviewSchema = z.object({
   rating: z.number().min(1, 'Rating is required').max(5),
   title: z.string().min(3, 'Title must be at least 3 characters'),
-  comment: z.string().min(10, 'Review must be at least 10 characters'),
+  description: z.string().min(10, 'Review must be at least 10 characters'),
 });
 
 type ReviewFormValues = z.infer<typeof reviewSchema>;
@@ -63,6 +64,7 @@ const StarRating = ({
 
 export const ReviewSection = ({ productId, reviews, onReviewAdded }: ReviewSectionProps) => {
   const { isAuthenticated } = useAuthStore();
+  const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedRating, setSelectedRating] = useState(0);
 
@@ -71,8 +73,16 @@ export const ReviewSection = ({ productId, reviews, onReviewAdded }: ReviewSecti
     defaultValues: { rating: 0 },
   });
 
-  const avgRating = reviews.length
-    ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+  const { data: reviewsResponse } = useQuery({
+    queryKey: ['product-reviews', productId],
+    queryFn: async () => (await api.get(`/products/${productId}/reviews`)).data,
+    enabled: !!productId,
+    staleTime: 60_000,
+  });
+  const currentReviews: Review[] = reviewsResponse?.data || reviews;
+
+  const avgRating = currentReviews.length
+    ? currentReviews.reduce((sum, r) => sum + r.rating, 0) / currentReviews.length
     : 0;
 
   const onSubmit = async (data: ReviewFormValues) => {
@@ -81,10 +91,12 @@ export const ReviewSection = ({ productId, reviews, onReviewAdded }: ReviewSecti
       await api.post(`/products/${productId}/reviews`, data);
       reset();
       setSelectedRating(0);
+      await queryClient.invalidateQueries({ queryKey: ['product-reviews', productId] });
+      await queryClient.invalidateQueries({ queryKey: ['product', productId] });
       onReviewAdded();
     } catch (err) {
       console.error(err);
-      alert('Failed to submit review.');
+      alert('Failed to submit review. Please check your details and try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -95,17 +107,17 @@ export const ReviewSection = ({ productId, reviews, onReviewAdded }: ReviewSecti
       <h2 className="text-2xl font-serif text-primary mb-8">Customer Reviews</h2>
 
       {/* Summary */}
-      {reviews.length > 0 && (
+      {currentReviews.length > 0 && (
         <div className="flex items-center gap-6 mb-10 p-6 bg-supporting/30 rounded">
           <div className="text-center">
-            <p className="text-5xl font-serif text-primary">{avgRating.toFixed(1)}</p>
+              <p className="text-5xl font-serif text-primary">{avgRating.toFixed(1)}</p>
             <StarRating rating={Math.round(avgRating)} />
-            <p className="text-xs text-gray-500 mt-1">{reviews.length} reviews</p>
+            <p className="text-xs text-gray-500 mt-1">{currentReviews.length} reviews</p>
           </div>
           <div className="flex-1 space-y-1">
             {[5, 4, 3, 2, 1].map((star) => {
-              const count = reviews.filter((r) => r.rating === star).length;
-              const pct = reviews.length ? (count / reviews.length) * 100 : 0;
+              const count = currentReviews.filter((r) => r.rating === star).length;
+              const pct = currentReviews.length ? (count / currentReviews.length) * 100 : 0;
               return (
                 <div key={star} className="flex items-center gap-3 text-sm">
                   <span className="w-4 text-gray-600">{star}</span>
@@ -126,10 +138,10 @@ export const ReviewSection = ({ productId, reviews, onReviewAdded }: ReviewSecti
 
       {/* Review List */}
       <div className="space-y-8 mb-12">
-        {reviews.length === 0 && (
+        {currentReviews.length === 0 && (
           <p className="text-gray-500">No reviews yet. Be the first to review this product!</p>
         )}
-        {reviews.map((review) => (
+        {currentReviews.map((review) => (
           <div key={review._id} className="border-b border-gray-100 pb-8">
             <div className="flex justify-between items-start mb-3">
               <div>
@@ -140,7 +152,7 @@ export const ReviewSection = ({ productId, reviews, onReviewAdded }: ReviewSecti
                 {new Date(review.createdAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })}
               </p>
             </div>
-            <p className="text-secondary text-sm leading-relaxed mb-3">{review.comment}</p>
+            <p className="text-secondary text-sm leading-relaxed mb-3">{review.description}</p>
             <p className="text-xs text-gray-500 font-medium">
               {review.user.firstName} {review.user.lastName.charAt(0)}.
             </p>
@@ -177,12 +189,12 @@ export const ReviewSection = ({ productId, reviews, onReviewAdded }: ReviewSecti
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Your Review</label>
               <textarea
-                {...register('comment')}
+                {...register('description')}
                 rows={4}
                 placeholder="Share the details of your experience with this product..."
                 className="w-full border border-gray-300 rounded px-4 py-2.5 focus:ring-1 focus:ring-primary focus:border-primary text-sm resize-none"
               />
-              {errors.comment && <p className="text-red-500 text-xs mt-1">{errors.comment.message}</p>}
+              {errors.description && <p className="text-red-500 text-xs mt-1">{errors.description.message}</p>}
             </div>
             <button
               type="submit"

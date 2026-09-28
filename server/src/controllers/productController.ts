@@ -6,13 +6,11 @@ import { ApiResponse } from '../utils/apiResponse';
 export const getProducts = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { 
-      category, collection, search, sort, status, limit, page,
+      category, collection, search, sort, limit, page,
       fabric, silkType, weave, color, minPrice, maxPrice, zariType, inStock, tags
     } = req.query;
 
-    const query: any = {};
-    if (status) query.status = status;
-    else query.status = 'PUBLISHED'; // default for public view
+    const query: any = { status: 'PUBLISHED' };
 
     if (category) query.category = category;
     if (collection) query.collections = collection;
@@ -23,9 +21,7 @@ export const getProducts = async (req: Request, res: Response, next: NextFunctio
     if (weave) query['attributes.weave'] = { $in: (weave as string).split(',') };
     if (zariType) query['attributes.zariType'] = { $in: (zariType as string).split(',') };
     
-    if (color) {
-      query.tags = { $in: (color as string).split(',') };
-    }
+    if (color) query['attributes.color'] = { $in: (color as string).split(',') };
     
     if (tags) {
       if (!query.tags) query.tags = {};
@@ -87,7 +83,12 @@ export const getProducts = async (req: Request, res: Response, next: NextFunctio
 
 export const getProductById = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const product = await Product.findById(req.params.id)
+    const productKey = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    if (!productKey) return next(new ApiError(404, 'Product not found'));
+    const productQuery = /^[a-f\d]{24}$/i.test(productKey)
+      ? Product.findOne({ _id: productKey, status: 'PUBLISHED' })
+      : Product.findOne({ slug: productKey, status: 'PUBLISHED' });
+    const product = await productQuery
       .populate('category', 'name slug')
       .populate('collections', 'name slug');
     if (!product) {
