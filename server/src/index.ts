@@ -30,7 +30,11 @@ import cookieParser from 'cookie-parser';
 const app: Application = express();
 
 // Middleware
-app.use(express.json());
+app.use(express.json({
+  verify: (req: Request & { rawBody?: Buffer }, _res, buffer) => {
+    req.rawBody = Buffer.from(buffer);
+  },
+}));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 

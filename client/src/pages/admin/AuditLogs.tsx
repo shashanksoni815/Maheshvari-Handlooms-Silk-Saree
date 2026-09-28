@@ -31,7 +31,7 @@ export const AuditLogs = () => {
       (log.admin?.firstName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
       (log.admin?.email?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
       (log.resourceId?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-      (log.details?.toLowerCase() || '').includes(searchTerm.toLowerCase());
+      JSON.stringify(log.details || '').toLowerCase().includes(searchTerm.toLowerCase());
       
     const matchesAction = actionFilter === 'ALL' || log.action === actionFilter;
     

@@ -15,7 +15,10 @@ export const Blog = () => {
   
   const [formData, setFormData] = useState({
     title: '',
+    slug: '',
+    excerpt: '',
     content: '',
+    readTime: '5 min read',
     category: '',
     author: 'Admin',
     isPublished: false,
@@ -27,7 +30,7 @@ export const Blog = () => {
   const fetchBlogs = async () => {
     setIsLoading(true);
     try {
-      const response = await api.get('/blogs'); // We can fetch from public or admin
+      const response = await api.get('/admin/blog');
       setBlogs(response.data.data);
     } catch (error) {
       console.error('Failed to fetch blogs', error);
@@ -45,7 +48,10 @@ export const Blog = () => {
     if (blog) {
       setFormData({
         title: blog.title,
+        slug: blog.slug || '',
+        excerpt: blog.excerpt || '',
         content: blog.content,
+        readTime: blog.readTime || '5 min read',
         category: blog.category,
         author: blog.author,
         isPublished: blog.isPublished,
@@ -54,7 +60,10 @@ export const Blog = () => {
     } else {
       setFormData({
         title: '',
+        slug: '',
+        excerpt: '',
         content: '',
+        readTime: '5 min read',
         category: '',
         author: 'Admin',
         isPublished: false,
@@ -176,6 +185,20 @@ export const Blog = () => {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Slug</label>
+                  <input type="text" value={formData.slug} onChange={(e) => setFormData({...formData, slug: e.target.value})} placeholder="Generated from title when empty" className="w-full px-3 py-2 border border-supporting rounded-sm focus:ring-1 focus:ring-accent" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Reading time *</label>
+                  <input required type="text" value={formData.readTime} onChange={(e) => setFormData({...formData, readTime: e.target.value})} className="w-full px-3 py-2 border border-supporting rounded-sm focus:ring-1 focus:ring-accent" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Excerpt *</label>
+                <textarea required rows={3} value={formData.excerpt} onChange={(e) => setFormData({...formData, excerpt: e.target.value})} className="w-full px-3 py-2 border border-supporting rounded-sm focus:ring-1 focus:ring-accent resize-y" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Category *</label>
                   <input required type="text" value={formData.category} onChange={(e) => setFormData({...formData, category: e.target.value})} className="w-full px-3 py-2 border border-supporting rounded-sm focus:ring-1 focus:ring-accent" />
                 </div>
@@ -185,8 +208,8 @@ export const Blog = () => {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Cover Image URL</label>
-                <input type="url" value={formData.image} onChange={(e) => setFormData({...formData, image: e.target.value})} className="w-full px-3 py-2 border border-supporting rounded-sm focus:ring-1 focus:ring-accent" />
+                <label className="block text-sm font-medium text-gray-700 mb-1">Cover Image URL *</label>
+                <input required type="url" value={formData.image} onChange={(e) => setFormData({...formData, image: e.target.value})} className="w-full px-3 py-2 border border-supporting rounded-sm focus:ring-1 focus:ring-accent" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Content (Markdown supported) *</label>

@@ -62,7 +62,7 @@ export const AdminLayout = () => {
           {navigation.map((item) => {
             // Check visibility
             if (item.superAdminOnly && !isSuperAdmin) return null;
-            if (!item.superAdminOnly && !hasPermission(item.permission as string) && !isSuperAdmin && item.href !== '/admin') return null; // Always show dashboard if they can access admin
+            if (!item.superAdminOnly && !hasPermission(item.permission as string) && !isSuperAdmin) return null;
 
             const isActive = location.pathname === item.href || (location.pathname.startsWith(`${item.href}/`) && item.href !== '/admin');
             return (

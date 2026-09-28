@@ -36,7 +36,7 @@ export const ProductForm = () => {
       color: '',
       zariType: '',
       occasion: '',
-      length: '5.5 meters',
+      sareeLength: '5.5 meters',
       blousePiece: true
     },
     tags: [] as string[]
@@ -52,8 +52,8 @@ export const ProductForm = () => {
   const fetchFormData = async () => {
     try {
       const [catRes, colRes] = await Promise.all([
-        api.get('/categories'),
-        api.get('/collections')
+        api.get('/admin/categories'),
+        api.get('/admin/collections')
       ]);
       setCategories(catRes.data.data || []);
       setCollections(colRes.data.data || []);
@@ -64,7 +64,7 @@ export const ProductForm = () => {
 
   const fetchProduct = async () => {
     try {
-      const res = await api.get(`/products/${id}`);
+      const res = await api.get(`/admin/products/${id}`);
       const p = res.data.data;
       setFormData({
         name: p.name || '',
@@ -87,7 +87,7 @@ export const ProductForm = () => {
           color: p.attributes?.color || '',
           zariType: p.attributes?.zariType || '',
           occasion: p.attributes?.occasion || '',
-          length: p.attributes?.length || '5.5 meters',
+          sareeLength: p.attributes?.sareeLength || '5.5 meters',
           blousePiece: p.attributes?.blousePiece ?? true
         },
         tags: p.tags || []

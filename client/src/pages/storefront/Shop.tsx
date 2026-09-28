@@ -88,10 +88,12 @@ export const Shop = () => {
     if (filters.inStock) params.append('inStock', 'true');
     if (sortOption) params.append('sort', sortOption);
     
-    // Grab search term from location state if user searched from header
+    // Preserve direct navigation filters such as the New Arrivals link.
     const searchParams = new URLSearchParams(location.search);
-    const q = searchParams.get('q');
-    if (q) params.append('search', q);
+    const search = searchParams.get('search') || searchParams.get('q');
+    if (search) params.append('search', search);
+    const tags = searchParams.get('tags');
+    if (tags) params.append('tags', tags);
 
     return params.toString();
   };

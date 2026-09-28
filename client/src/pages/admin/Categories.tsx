@@ -22,7 +22,7 @@ export const Categories = () => {
   const fetchCategories = async () => {
     setIsLoading(true);
     try {
-      const response = await api.get('/categories');
+      const response = await api.get('/admin/categories');
       setCategories(response.data.data);
     } catch (error) {
       console.error('Failed to fetch categories', error);

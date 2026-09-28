@@ -5,15 +5,16 @@ import {
   createAdminProduct,
   updateAdminProduct,
   deleteAdminProduct,
-  bulkUpdateProducts
+  bulkUpdateProducts,
+  getAdminProducts,
+  getAdminProductById,
 } from '../../controllers/admin/adminProductController';
-import { getProducts, getProductById } from '../../controllers/productController';
 
 const router = Router();
 
-// GET routes can reuse storefront controllers if appropriate, but with read permission
-router.get('/', authorizePermission('products.read'), getProducts);
-router.get('/:id', authorizePermission('products.read'), getProductById);
+// Admin reads include drafts and archived records needed for full catalog management.
+router.get('/', authorizePermission('products.read'), getAdminProducts);
+router.get('/:id', authorizePermission('products.read'), getAdminProductById);
 
 router.post('/', authorizePermission('products.create'), auditLog('CREATE', 'PRODUCT'), createAdminProduct);
 router.put('/:id', authorizePermission('products.update'), auditLog('UPDATE', 'PRODUCT'), updateAdminProduct);

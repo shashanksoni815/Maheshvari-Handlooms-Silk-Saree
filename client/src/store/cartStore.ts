@@ -124,8 +124,14 @@ export const useCartStore = create<CartState>()(
       name: 'cart-storage',
       partialize: (state) => ({ 
         items: state.items,
-        couponCode: state.couponCode,
-        couponDiscount: state.couponDiscount 
+      }),
+      // Ignore previously persisted browser-only coupon discounts. A discount
+      // must be validated by the server before it can affect checkout totals.
+      merge: (persistedState, currentState) => ({
+        ...currentState,
+        items: (persistedState as Partial<CartState> | undefined)?.items || [],
+        couponCode: null,
+        couponDiscount: 0,
       }),
     }
   )

@@ -8,4 +8,26 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  build: {
+    rolldownOptions: {
+      output: {
+        codeSplitting: {
+          minSize: 20_000,
+          minShareCount: 2,
+          groups: [
+            {
+              name: 'charts',
+              test: /node_modules[\\/](recharts|victory-vendor|d3-[^\\/]+)/,
+              priority: 20,
+            },
+            {
+              name: 'motion',
+              test: /node_modules[\\/](framer-motion|motion-dom|motion-utils)/,
+              priority: 15,
+            },
+          ],
+        },
+      },
+    },
+  },
 })

@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import Category from '../models/Category';
+import Product from '../models/Product';
 import { ApiError } from '../utils/apiError';
 import { ApiResponse } from '../utils/apiResponse';
 
@@ -56,6 +57,12 @@ export const updateCategory = async (req: Request, res: Response, next: NextFunc
 
 export const deleteCategory = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const categoryId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    if (!categoryId) return next(new ApiError(404, 'Category not found'));
+    const productCount = await Product.countDocuments({ category: categoryId });
+    if (productCount > 0) {
+      return next(new ApiError(409, 'Cannot delete a category that is assigned to products'));
+    }
     const category = await Category.findByIdAndDelete(req.params.id);
     if (!category) {
       return next(new ApiError(404, 'Category not found'));

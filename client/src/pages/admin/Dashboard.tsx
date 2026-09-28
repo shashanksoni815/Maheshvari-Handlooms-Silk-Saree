@@ -1,63 +1,51 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend, PieChart, Pie, Cell } from 'recharts';
-import { TrendingUp, Users, ShoppingBag, DollarSign, Package, AlertCircle } from 'lucide-react';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell } from 'recharts';
+import { Users, ShoppingBag, DollarSign, AlertCircle, Loader2 } from 'lucide-react';
 import api from '../../services/api';
 
 const COLORS = ['#063F32', '#C6A15B', '#3B2418', '#6B1824'];
 
-const revenueData = [
-  { name: 'Jan', current: 4000, previous: 2400 },
-  { name: 'Feb', current: 3000, previous: 1398 },
-  { name: 'Mar', current: 2000, previous: 9800 },
-  { name: 'Apr', current: 2780, previous: 3908 },
-  { name: 'May', current: 1890, previous: 4800 },
-  { name: 'Jun', current: 2390, previous: 3800 },
-  { name: 'Jul', current: 3490, previous: 4300 },
-];
-
-const categoryData = [
-  { name: 'Silk Sarees', value: 400 },
-  { name: 'Cotton Sarees', value: 300 },
-  { name: 'Banarasi', value: 300 },
-  { name: 'Kanjivaram', value: 200 },
-];
-
 export const Dashboard = () => {
-  const [stats, setStats] = useState({
-    totalRevenue: 0,
-    totalOrders: 0,
-    totalProducts: 0,
-    totalUsers: 0
-  });
-
+  const [stats, setStats] = useState<any>(null);
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
 
   useEffect(() => {
-    // In a real scenario we would fetch this from /api/v1/analytics or similar.
-    // We'll mock the fetch for now to demonstrate UI since the backend for analytics isn't fully built yet.
-    setTimeout(() => {
-      setStats({
-        totalRevenue: 1245000,
-        totalOrders: 256,
-        totalProducts: 142,
-        totalUsers: 890
-      });
-      
-      setRecentOrders([
-        { _id: 'ORD-89237', user: { firstName: 'Anjali', lastName: 'Sharma' }, total: 4500, createdAt: new Date().toISOString(), isDelivered: false },
-        { _id: 'ORD-89236', user: { firstName: 'Vikram', lastName: 'Rathore' }, total: 12500, createdAt: new Date(Date.now() - 86400000).toISOString(), isDelivered: true },
-        { _id: 'ORD-89235', user: { firstName: 'Priya', lastName: 'Desai' }, total: 3200, createdAt: new Date(Date.now() - 172800000).toISOString(), isDelivered: true },
-      ]);
-    }, 500);
+    let active = true;
+    api.get('/admin/dashboard')
+      .then(response => {
+        if (!active) return;
+        setStats(response.data.data);
+        setRecentOrders(response.data.data.recentOrders || []);
+      })
+      .catch(error => {
+        if (!active) return;
+        setLoadError(error.response?.data?.message || 'Could not load dashboard data.');
+      })
+      .finally(() => { if (active) setIsLoading(false); });
+
+    return () => { active = false; };
   }, []);
 
+  const revenueData: any[] = stats?.revenueByMonth || [];
+  const categoryData: any[] = stats?.categorySales || [];
+
   const statCards = [
-    { name: 'Total Revenue', value: `₹${stats.totalRevenue.toLocaleString('en-IN')}`, change: '+12.5%', icon: DollarSign, trend: 'up' },
-    { name: 'Total Orders', value: stats.totalOrders.toString(), change: '+8.2%', icon: ShoppingBag, trend: 'up' },
-    { name: 'Total Customers', value: stats.totalUsers.toString(), change: '+14.1%', icon: Users, trend: 'up' },
-    { name: 'Low Stock Items', value: '12', change: '-2.4%', icon: AlertCircle, trend: 'down' },
+    { name: 'Paid Revenue', value: `₹${(stats?.totalRevenue || 0).toLocaleString('en-IN')}`, icon: DollarSign },
+    { name: 'Total Orders', value: String(stats?.totalOrders || 0), icon: ShoppingBag },
+    { name: 'Total Customers', value: String(stats?.totalUsers || 0), icon: Users },
+    { name: 'Low Stock Items', value: String(stats?.lowStockItems || 0), icon: AlertCircle },
   ];
+
+  if (isLoading) {
+    return <div className="flex h-64 items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  }
+
+  if (loadError) {
+    return <div role="alert" className="rounded border border-red-200 bg-red-50 p-6 text-sm text-red-700">{loadError}</div>;
+  }
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -69,10 +57,7 @@ export const Dashboard = () => {
               <div className="p-3 bg-supporting/30 text-primary rounded-full">
                 <item.icon className="w-6 h-6" />
               </div>
-              <div className={`flex items-center text-xs font-bold ${item.trend === 'up' ? 'text-green-600' : 'text-red-500'}`}>
-                {item.change}
-                <TrendingUp className={`w-3 h-3 ml-1 ${item.trend === 'down' && 'rotate-180'}`} />
-              </div>
+              <span className="text-[10px] uppercase tracking-wider text-muted">Live</span>
             </div>
             <div>
               <p className="text-3xl font-serif text-primary mb-1">{item.value}</p>
@@ -138,8 +123,8 @@ export const Dashboard = () => {
               </PieChart>
             </ResponsiveContainer>
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-              <span className="text-2xl font-serif text-primary">1,200</span>
-              <span className="text-[10px] uppercase tracking-widest text-muted font-bold">Total Sales</span>
+              <span className="text-2xl font-serif text-primary">{categoryData.reduce((total: number, entry: any) => total + entry.value, 0).toLocaleString('en-IN')}</span>
+              <span className="text-[10px] uppercase tracking-widest text-muted font-bold">Paid Sales ₹</span>
             </div>
           </div>
           <div className="mt-6 space-y-3">
@@ -179,7 +164,7 @@ export const Dashboard = () => {
               {recentOrders.map((order) => (
                 <tr key={order._id} className="hover:bg-gray-50/50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-primary">
-                    {order._id}
+                    {order.orderNumber || order._id}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-secondary">
                     {order.user.firstName} {order.user.lastName}
@@ -188,15 +173,15 @@ export const Dashboard = () => {
                     {new Date(order.createdAt).toLocaleDateString('en-IN')}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-primary">
-                    ₹{order.total.toLocaleString('en-IN')}
+                    ₹{order.pricing?.total?.toLocaleString('en-IN') || 0}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-3 py-1 inline-flex text-[10px] leading-4 font-bold uppercase tracking-widest border ${
-                      order.isDelivered 
+                      order.status === 'DELIVERED' 
                         ? 'bg-primary/5 text-primary border-primary' 
                         : 'bg-accent/10 text-brown border-accent'
                     }`}>
-                      {order.isDelivered ? 'Delivered' : 'Processing'}
+                      {order.status || 'PENDING'}
                     </span>
                   </td>
                 </tr>

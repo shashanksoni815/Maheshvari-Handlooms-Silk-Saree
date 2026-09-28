@@ -21,6 +21,7 @@ export interface IProduct extends Document {
     silkType?: string;
     weave?: string;
     pattern?: string;
+    color?: string;
     zariType?: string;
     occasion?: string[];
     sareeLength?: string;
@@ -71,6 +72,7 @@ const ProductSchema: Schema = new Schema(
       silkType: String,
       weave: String,
       pattern: String,
+      color: String,
       zariType: String,
       occasion: [String],
       sareeLength: String,

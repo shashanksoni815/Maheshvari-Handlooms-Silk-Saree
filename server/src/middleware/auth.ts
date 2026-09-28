@@ -29,6 +29,10 @@ export const protect = async (req: AuthRequest, res: Response, next: NextFunctio
       return next(new ApiError(401, 'The user belonging to this token does no longer exist.'));
     }
 
+    if (user.isActive === false) {
+      return next(new ApiError(403, 'This account has been deactivated'));
+    }
+
     req.user = user;
     next();
   } catch (error) {

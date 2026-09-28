@@ -5,6 +5,7 @@ import api from '../../services/api';
 export const Reports = () => {
   const [stats, setStats] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
 
   useEffect(() => {
     fetchStats();
@@ -13,26 +14,11 @@ export const Reports = () => {
   const fetchStats = async () => {
     setIsLoading(true);
     try {
-      // In a real app, you'd fetch this from a specific reports aggregation endpoint
-      const [ordersRes, usersRes, productsRes] = await Promise.all([
-        api.get('/admin/orders'),
-        api.get('/admin/customers'),
-        api.get('/admin/products')
-      ]);
-
-      const orders = ordersRes.data.data;
-      const totalRevenue = orders.filter((o: any) => o.isPaid || o.paymentInfo?.status === 'COMPLETED')
-                                 .reduce((sum: number, o: any) => sum + (o.pricing?.total || 0), 0);
-      
-      setStats({
-        totalOrders: orders.length,
-        totalRevenue: totalRevenue,
-        totalCustomers: usersRes.data.data.length,
-        totalProducts: productsRes.data.data.length,
-        recentOrders: orders.slice(0, 5)
-      });
+      const response = await api.get('/admin/reports');
+      setStats(response.data.data);
     } catch (error) {
       console.error('Failed to fetch stats', error);
+      setLoadError('Could not load reports. Check that your admin account has reports.read permission.');
     } finally {
       setIsLoading(false);
     }
@@ -40,6 +26,10 @@ export const Reports = () => {
 
   if (isLoading) {
     return <div className="p-12 text-center animate-pulse">Loading reports...</div>;
+  }
+
+  if (loadError) {
+    return <div role="alert" className="p-6 border border-red-200 bg-red-50 text-red-700">{loadError}</div>;
   }
 
   return (
@@ -78,7 +68,7 @@ export const Reports = () => {
           </div>
           <div>
             <p className="text-xs text-muted uppercase tracking-widest font-bold">Customers</p>
-            <p className="text-2xl font-bold text-primary">{stats?.totalCustomers || 0}</p>
+            <p className="text-2xl font-bold text-primary">{stats?.totalUsers || 0}</p>
           </div>
         </div>
 

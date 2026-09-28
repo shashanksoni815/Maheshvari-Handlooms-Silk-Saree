@@ -55,7 +55,7 @@ export const CollectionDetail = () => {
       <div className="relative h-[60vh] md:h-[70vh] w-full overflow-hidden">
         <div className="absolute inset-0 bg-black/40 z-10" />
         <img 
-          src={collection.image || `https://images.unsplash.com/photo-1610030469983-98e550d6193c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80`} 
+          src={collection.bannerImage || `https://images.unsplash.com/photo-1610030469983-98e550d6193c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80`} 
           alt={collection.name} 
           className="w-full h-full object-cover object-center"
         />

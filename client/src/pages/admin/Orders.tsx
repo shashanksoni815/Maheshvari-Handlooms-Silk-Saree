@@ -7,17 +7,16 @@ export const Orders = () => {
   const [orders, setOrders] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    fetchOrders();
-  }, []);
 
   const fetchOrders = async () => {
     setIsLoading(true);
     try {
-      const res = await api.get('/admin/orders');
-      setOrders(res.data.data);
+      const res = await api.get('/admin/orders', { params: { page: currentPage, limit: 50, search: searchTerm } });
+      setOrders(res.data.data?.orders || []);
+      setTotalCount(res.data.data?.pagination?.total || 0);
     } catch (error) {
       console.error('Failed to fetch orders', error);
     } finally {
@@ -25,12 +24,10 @@ export const Orders = () => {
     }
   };
 
-  const filteredOrders = orders.filter(o => 
-    (o.orderNumber?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-    (o._id?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-    (o.user?.firstName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-    (o.user?.email?.toLowerCase() || '').includes(searchTerm.toLowerCase())
-  );
+  useEffect(() => {
+    const timer = window.setTimeout(fetchOrders, 250);
+    return () => window.clearTimeout(timer);
+  }, [currentPage, searchTerm]);
 
   const columns = [
     {
@@ -98,13 +95,13 @@ export const Orders = () => {
       </div>
 
       <AdminDataTable
-        data={filteredOrders}
+        data={orders}
         columns={columns}
-        totalCount={filteredOrders.length}
-        currentPage={1}
+        totalCount={totalCount}
+        currentPage={currentPage}
         pageSize={50}
-        onPageChange={() => {}}
-        onSearch={setSearchTerm}
+        onPageChange={setCurrentPage}
+        onSearch={(value) => { setCurrentPage(1); setSearchTerm(value); }}
         onView={(row) => navigate(`/admin/orders/${row._id}`)}
         isLoading={isLoading}
         searchPlaceholder="Search orders by ID, Name, or Email..."

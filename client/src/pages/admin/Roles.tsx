@@ -94,7 +94,7 @@ export const Roles = () => {
     'products.read', 'products.create', 'products.update', 'products.delete',
     'categories.read', 'categories.create', 'categories.update', 'categories.delete',
     'collections.read', 'collections.create', 'collections.update', 'collections.delete',
-    'inventory.read', 'inventory.update',
+    'inventory.read', 'inventory.adjust',
     'orders.read', 'orders.update', 'orders.refund',
     'customers.read', 'customers.update',
     'reviews.read', 'reviews.update', 'reviews.delete',

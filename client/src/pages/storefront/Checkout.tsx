@@ -20,6 +20,28 @@ const addressSchema = z.object({
 
 type CheckoutFormValues = z.infer<typeof addressSchema>;
 
+let razorpayScriptPromise: Promise<boolean> | null = null;
+
+const loadRazorpay = (): Promise<boolean> => {
+  if ((window as any).Razorpay) return Promise.resolve(true);
+  if (razorpayScriptPromise) return razorpayScriptPromise;
+
+  razorpayScriptPromise = new Promise<boolean>((resolve) => {
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    script.onload = () => resolve(true);
+    script.onerror = () => {
+      script.remove();
+      razorpayScriptPromise = null;
+      resolve(false);
+    };
+    document.body.appendChild(script);
+  });
+
+  return razorpayScriptPromise;
+};
+
 export const Checkout = () => {
   const items = useCartStore(state => state.items);
   const couponCode = useCartStore(state => state.couponCode);
@@ -30,6 +52,8 @@ export const Checkout = () => {
   const isAuthenticated = useAuthStore(state => state.isAuthenticated);
   const navigate = useNavigate();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentMessage, setPaymentMessage] = useState('');
+  const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
 
   const subtotal = items.reduce((total, item) => total + item.price * item.quantity, 0);
   const discount = (subtotal * couponDiscount) / 100;
@@ -45,16 +69,6 @@ export const Checkout = () => {
     }
   });
 
-  const loadRazorpay = () => {
-    return new Promise((resolve) => {
-      const script = document.createElement('script');
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-      script.onload = () => resolve(true);
-      script.onerror = () => resolve(false);
-      document.body.appendChild(script);
-    });
-  };
-
   const handlePayment = async (data: CheckoutFormValues) => {
     if (!isAuthenticated) {
       alert("Please login or create an account to proceed with checkout.");
@@ -62,31 +76,24 @@ export const Checkout = () => {
       return;
     }
 
+    const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY_ID;
+    if (!razorpayKey || razorpayKey === 'YOUR_KEY_ID' || razorpayKey === 'rzp_test_your_key_id') {
+      alert('Online payments are not configured. Please contact the store before placing an order.');
+      return;
+    }
+
     setIsProcessing(true);
+    setPaymentMessage('');
 
     try {
       const orderData = {
         items: items.map(i => ({
           product: i.product,
-          name: i.name,
-          price: i.price,
           quantity: i.quantity,
-          image: i.image
         })),
         shippingAddress: data,
-        pricing: {
-          subtotal,
-          discount,
-          tax,
-          shipping,
-          total
-        },
-        couponCode,
         paymentMethod: 'RAZORPAY'
       };
-
-      const orderRes = await api.post('/orders', orderData);
-      const orderId = orderRes.data.data._id;
 
       const res = await loadRazorpay();
       if (!res) {
@@ -95,38 +102,26 @@ export const Checkout = () => {
         return;
       }
 
-      const rzpOrderRes = await api.post(`/payments/create-order/${orderId}`);
-      const { amount, id: razorpayOrderId, currency } = rzpOrderRes.data.data;
-
-      const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY_ID;
-
-      // Mock payment flow for testing without valid Razorpay credentials
-      if (!razorpayKey || razorpayKey === 'YOUR_KEY_ID' || razorpayKey === 'rzp_test_your_key_id') {
-        try {
-          await api.post('/payments/verify', {
-            razorpayOrderId: razorpayOrderId,
-            razorpayPaymentId: `mock_payment_${Date.now()}`,
-            razorpaySignature: 'mock_signature',
-            orderId: orderId
-          });
-          
-          clearCart();
-          navigate(`/order-success/${orderId}`);
-        } catch (err) {
-          alert('Payment verification failed. Please contact support.');
-        }
-        setIsProcessing(false);
-        return;
+      let orderId = pendingOrderId;
+      if (!orderId) {
+        const orderRes = await api.post('/orders', orderData);
+        orderId = orderRes.data.data._id;
+        setPendingOrderId(orderId);
       }
 
+      const rzpOrderRes = await api.post(`/payments/create-order/${orderId}`);
+      const { amount, id: razorpayOrderId, currency } = rzpOrderRes.data.data;
+      let paymentVerificationStarted = false;
+
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'YOUR_KEY_ID', 
+        key: razorpayKey,
         amount: amount.toString(),
         currency: currency,
         name: 'Maheshwari Silk',
         description: 'Premium Saree Purchase',
         order_id: razorpayOrderId,
-        handler: async function (response: any) {
+        handler: async (response: any) => {
+          paymentVerificationStarted = true;
           try {
             await api.post('/payments/verify', {
               razorpayOrderId: response.razorpay_order_id,
@@ -135,11 +130,21 @@ export const Checkout = () => {
               orderId: orderId
             });
             
+            setPendingOrderId(null);
             clearCart();
             navigate(`/order-success/${orderId}`);
-          } catch (err) {
-            alert('Payment verification failed. Please contact support.');
+          } catch (error: any) {
+            setPaymentMessage(error.response?.data?.message || 'Payment was received, but confirmation is still pending. Check your orders before trying again.');
+          } finally {
+            setIsProcessing(false);
           }
+        },
+        modal: {
+          ondismiss: () => {
+            if (paymentVerificationStarted) return;
+            setIsProcessing(false);
+            setPaymentMessage('Payment was not completed. Your order is saved; you can safely reopen Razorpay to retry.');
+          },
         },
         prefill: {
           name: data.fullName,
@@ -152,12 +157,15 @@ export const Checkout = () => {
       };
 
       const paymentObject = new (window as any).Razorpay(options);
+      paymentObject.on('payment.failed', (response: any) => {
+        const description = response?.error?.description;
+        setPaymentMessage(description || 'Payment failed. Your order is saved; you can retry payment below.');
+      });
       paymentObject.open();
 
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      alert('Something went wrong during checkout. Please try again.');
-    } finally {
+      setPaymentMessage(error.response?.data?.message || 'Something went wrong during checkout. Please try again.');
       setIsProcessing(false);
     }
   };
@@ -247,14 +255,14 @@ export const Checkout = () => {
         </div>
 
         {/* Right Column: Order Summary & Payment */}
-        <div className="w-full lg:w-[420px] flex-shrink-0">
+        <div className="w-full lg:w-105 shrink-0">
           <div className="bg-white p-6 md:p-8 border border-supporting shadow-sm sticky top-24">
             <h2 className="text-xl font-serif text-primary mb-6 border-b border-supporting pb-4">Order Summary</h2>
             
             <div className="space-y-4 mb-8 max-h-[30vh] overflow-y-auto pr-2 custom-scrollbar">
               {items.map(item => (
                 <div key={item.product} className="flex gap-4 items-center">
-                  <div className="w-16 h-20 bg-supporting/20 flex-shrink-0 border border-supporting">
+                  <div className="w-16 h-20 bg-supporting/20 shrink-0 border border-supporting">
                     <img src={item.image} alt={item.name} className="w-full h-full object-cover object-top" />
                   </div>
                   <div className="flex-1 text-sm">
@@ -267,6 +275,14 @@ export const Checkout = () => {
             </div>
 
             <div className="space-y-4 text-sm border-t border-supporting pt-6 mb-8 text-secondary">
+              {paymentMessage && (
+                <div role="status" aria-live="polite" className="rounded-sm border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+                  {paymentMessage}
+                  {pendingOrderId && !isProcessing && (
+                    <p className="mt-2 text-xs">Your saved order will be reused when you retry, so inventory will not be reserved twice.</p>
+                  )}
+                </div>
+              )}
               <div className="flex justify-between">
                 <span>Subtotal</span>
                 <span>₹{subtotal.toLocaleString('en-IN')}</span>

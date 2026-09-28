@@ -54,7 +54,7 @@ export const Collections = () => {
                 <Link to={`/collections/${collection.slug}`} className="block relative aspect-[4/5] overflow-hidden group">
                   <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors z-10 duration-700" />
                   <img 
-                    src={collection.image || `https://images.unsplash.com/photo-1583391733959-b52d9a334ece?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80`} 
+                    src={collection.bannerImage || `https://images.unsplash.com/photo-1583391733959-b52d9a334ece?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80`} 
                     alt={collection.name} 
                     className="w-full h-full object-cover object-top transition-transform duration-1000 group-hover:scale-105"
                   />

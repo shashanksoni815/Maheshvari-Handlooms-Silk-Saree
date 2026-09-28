@@ -84,11 +84,13 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({ product, on
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="relative aspect-[3/4] overflow-hidden bg-supporting/10">
+      <div className="relative aspect-3/4 overflow-hidden bg-supporting/10">
         <Link to={`/product/${product._id}`} className="block w-full h-full">
           <img
             src={product.images[0]?.url}
             alt={product.name}
+            loading="lazy"
+            decoding="async"
             className={`w-full h-full object-cover object-top transition-transform duration-700 ${isHovered ? 'scale-105' : 'scale-100'}`}
           />
           
@@ -97,6 +99,8 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({ product, on
             <img
               src={product.images[1]?.url}
               alt={`${product.name} detail`}
+              loading="lazy"
+              decoding="async"
               className={`absolute inset-0 w-full h-full object-cover object-top transition-opacity duration-700 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
             />
           )}
@@ -152,8 +156,8 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({ product, on
         </div>
       </div>
 
-      <div className="flex flex-col flex-grow mt-3 lg:mt-4">
-        <Link to={`/product/${product._id}`} className="block flex-grow">
+      <div className="flex flex-col grow mt-3 lg:mt-4">
+        <Link to={`/product/${product._id}`} className="block grow">
           <p className="text-[8px] lg:text-[9px] uppercase tracking-[0.2em] text-muted font-bold mb-1.5 lg:mb-2">
             {product.category?.name || 'MAHESHWARI SILK'}
           </p>

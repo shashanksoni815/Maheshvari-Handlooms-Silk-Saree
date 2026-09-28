@@ -9,7 +9,6 @@ export const Cart = () => {
   const updateQuantity = useCartStore(state => state.updateQuantity);
   const couponCode = useCartStore(state => state.couponCode);
   const couponDiscount = useCartStore(state => state.couponDiscount);
-  const applyCoupon = useCartStore(state => state.applyCoupon);
   const removeCoupon = useCartStore(state => state.removeCoupon);
   
   const navigate = useNavigate();
@@ -25,15 +24,9 @@ export const Cart = () => {
   const handleApplyCoupon = (e: React.FormEvent) => {
     e.preventDefault();
     if (!couponInput.trim()) return;
-    
-    // Mock Coupon Logic
-    if (couponInput.toUpperCase() === 'WELCOME10') {
-      applyCoupon('WELCOME10', 10); // 10% off
-      setCouponError('');
-      setCouponInput('');
-    } else {
-      setCouponError('Invalid or expired coupon code.');
-    }
+
+    // Do not display a discount until it can be validated and enforced server-side.
+    setCouponError('Coupons are temporarily unavailable. No discount has been applied.');
   };
 
   if (items.length === 0) {
@@ -68,7 +61,7 @@ export const Cart = () => {
             {items.map((item) => (
               <div key={item.product} className="flex flex-col md:grid md:grid-cols-12 gap-6 items-center py-4 border-b border-supporting/50">
                 <div className="col-span-6 w-full flex items-center gap-6">
-                  <Link to={`/product/${item.product}`} className="w-24 h-32 flex-shrink-0 bg-supporting/20 overflow-hidden block">
+                  <Link to={`/product/${item.product}`} className="w-24 h-32 shrink-0 bg-supporting/20 overflow-hidden block">
                     <img src={item.image} alt={item.name} className="w-full h-full object-cover object-top hover:scale-105 transition-transform" />
                   </Link>
                   <div className="flex flex-col flex-1">
@@ -113,7 +106,7 @@ export const Cart = () => {
         </div>
 
         {/* Order Summary */}
-        <div className="w-full lg:w-96 flex-shrink-0">
+        <div className="w-full lg:w-96 shrink-0">
           <div className="bg-white p-6 md:p-8 border border-supporting shadow-sm">
             <h2 className="text-xl font-serif text-primary mb-6 border-b border-supporting pb-4">Order Summary</h2>
             

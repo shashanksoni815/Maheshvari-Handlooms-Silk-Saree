@@ -34,7 +34,7 @@ export const AboutUs = () => {
       </div>
 
       {/* Craftsmanship Image Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-0 max-w-[1440px] mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-0 max-w-360 mx-auto">
         <div className="aspect-square relative group overflow-hidden">
           <img src="https://images.unsplash.com/photo-1604085572504-a392ddf0d86a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Silk Threads" className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" />
           <div className="absolute inset-0 bg-black/30 flex items-center justify-center p-8 opacity-0 group-hover:opacity-100 transition-opacity duration-500 text-center">

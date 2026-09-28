@@ -13,39 +13,39 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({ onMenuClick, onSearc
   const cartCount = useCartStore(state => state.items.reduce((total, item) => total + item.quantity, 0));
 
   return (
-    <div className="lg:hidden flex items-center justify-between h-[60px] md:h-[68px] px-4 md:px-6">
-      <div className="flex-1 flex justify-start">
+    <div className="flex h-[60px] items-center justify-between px-4 md:h-[68px] md:px-6 lg:hidden">
+      <div className="flex flex-1 justify-start">
         <button 
           onClick={onMenuClick}
-          className="p-2 -ml-2 text-secondary hover:text-primary transition-colors"
+          className="-ml-2 rounded-full border border-[#d9c8a6] bg-white/60 p-2 text-[#063F35] transition-colors"
           aria-label="Open menu"
         >
-          <Menu className="w-6 h-6" strokeWidth={1.5} />
+          <Menu className="h-5 w-5" strokeWidth={1.5} />
         </button>
       </div>
 
-      <div className="flex-1 flex justify-center">
+      <div className="flex flex-1 justify-center">
         <Link to="/">
-          <img src="/logo.png" alt="Maheshwari Silk" className="h-10 md:h-12 w-auto object-contain" />
+          <img src="/logo.png" alt="Maheshwari Silk" className="h-9 w-auto object-contain md:h-10" />
         </Link>
       </div>
 
-      <div className="flex-1 flex justify-end items-center space-x-2 md:space-x-4">
+      <div className="flex flex-1 items-center justify-end gap-2 md:gap-3">
         <button 
           onClick={onSearchClick}
-          className="p-2 text-secondary hover:text-primary transition-colors"
+          className="rounded-full border border-[#d9c8a6] bg-white/60 p-2 text-[#063F35] transition-colors"
           aria-label="Search"
         >
-          <Search className="w-5 h-5 md:w-6 md:h-6" strokeWidth={1.5} />
+          <Search className="h-4 w-4 md:h-5 md:w-5" strokeWidth={1.5} />
         </button>
         <button 
           onClick={toggleDrawer}
-          className="p-2 -mr-2 text-secondary hover:text-primary transition-colors relative"
+          className="relative -mr-2 rounded-full border border-[#d9c8a6] bg-white/60 p-2 text-[#063F35] transition-colors"
           aria-label="Cart"
         >
-          <ShoppingBag className="w-5 h-5 md:w-6 md:h-6" strokeWidth={1.5} />
+          <ShoppingBag className="h-4 w-4 md:h-5 md:w-5" strokeWidth={1.5} />
           {cartCount > 0 && (
-            <span className="absolute top-1 right-0 inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 text-[9px] font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-primary rounded-full">
+            <span className="absolute -right-0.5 -top-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-[#063F35] px-1 text-[9px] font-bold leading-none text-white">
               {cartCount}
             </span>
           )}

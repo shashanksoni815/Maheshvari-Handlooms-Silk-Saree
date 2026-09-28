@@ -20,27 +20,29 @@ export const Products = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   
   const navigate = useNavigate();
   const { confirm } = useConfirmation();
 
-  useEffect(() => {
-    fetchProducts();
-  }, []);
-
   const fetchProducts = async () => {
     setIsLoading(true);
     try {
-      const res = await api.get('/products');
-      // Handle both paginated and non-paginated responses
-      const data = res.data.data;
-      setProducts(Array.isArray(data) ? data : data.products || []);
+      const res = await api.get('/admin/products', { params: { page: currentPage, limit: 50, search: searchTerm } });
+      setProducts(res.data.data?.products || []);
+      setTotalCount(res.data.data?.pagination?.total || 0);
     } catch (error) {
       console.error('Error fetching products:', error);
     } finally {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    const timer = window.setTimeout(fetchProducts, 250);
+    return () => window.clearTimeout(timer);
+  }, [currentPage, searchTerm]);
 
   const handleDelete = (product: Product) => {
     confirm({
@@ -58,11 +60,6 @@ export const Products = () => {
       }
     });
   };
-
-  const filteredProducts = products.filter(p => 
-    p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    p.sku.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   const columns = [
     {
@@ -138,13 +135,13 @@ export const Products = () => {
       </div>
 
       <AdminDataTable
-        data={filteredProducts}
+        data={products}
         columns={columns}
-        totalCount={filteredProducts.length}
-        currentPage={1}
+        totalCount={totalCount}
+        currentPage={currentPage}
         pageSize={50}
-        onPageChange={() => {}}
-        onSearch={setSearchTerm}
+        onPageChange={setCurrentPage}
+        onSearch={(value) => { setCurrentPage(1); setSearchTerm(value); }}
         onEdit={(row) => navigate(`/admin/products/${row._id}/edit`)}
         onDelete={handleDelete}
         isLoading={isLoading}

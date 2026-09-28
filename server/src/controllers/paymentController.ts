@@ -3,20 +3,41 @@ import { Request, Response, NextFunction } from 'express';
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
 import Order from '../models/Order';
+import { AuthRequest } from '../middleware/auth';
 import { ApiError } from '../utils/apiError';
 import { ApiResponse } from '../utils/apiResponse';
 import sendEmail from '../utils/emailService';
 
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID || 'dummy_key_id',
-  key_secret: process.env.RAZORPAY_KEY_SECRET || 'dummy_key_secret',
-});
+const isRazorpayConfigured = () => {
+  const keyId = process.env.RAZORPAY_KEY_ID;
+  const keySecret = process.env.RAZORPAY_KEY_SECRET;
+  return Boolean(
+    keyId && keySecret &&
+    keyId !== 'rzp_test_your_key_id' &&
+    keySecret !== 'your_razorpay_key_secret'
+  );
+};
+
+const getRazorpayClient = () => {
+  if (!isRazorpayConfigured()) {
+    throw new ApiError(503, 'Online payments are not configured');
+  }
+
+  return new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID!,
+    key_secret: process.env.RAZORPAY_KEY_SECRET!,
+  });
+};
 
 // @desc    Create Razorpay Order
 // @route   POST /api/v1/payments/create-order/:orderId
 // @access  Private
 export const createRazorpayOrder = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    if (!isRazorpayConfigured()) {
+      return next(new ApiError(503, 'Online payments are not configured'));
+    }
+
     const order = await Order.findById(req.params.orderId);
 
     if (!order) {
@@ -28,24 +49,28 @@ export const createRazorpayOrder = async (req: Request, res: Response, next: Nex
       return next(new ApiError(403, 'Not authorized'));
     }
 
+    if (order.paymentInfo.status !== 'PENDING') {
+      return next(new ApiError(409, 'This order is not awaiting payment'));
+    }
+
+    if (order.paymentInfo.razorpayOrderId) {
+      return res.status(200).json(new ApiResponse('Razorpay order already created', {
+        id: order.paymentInfo.razorpayOrderId,
+        amount: Math.round(order.pricing.total * 100),
+        currency: 'INR',
+      }));
+    }
+
     const options = {
       amount: Math.round(order.pricing.total * 100), // Amount in smallest currency unit (paise)
       currency: 'INR',
       receipt: `receipt_order_${order._id}`,
     };
 
-    let razorpayOrder;
-    if (process.env.RAZORPAY_KEY_ID === 'rzp_test_your_key_id' || !process.env.RAZORPAY_KEY_ID) {
-      razorpayOrder = {
-        id: `mock_order_${Date.now()}`,
-        amount: options.amount,
-        currency: options.currency,
-        receipt: options.receipt,
-        status: 'created'
-      };
-    } else {
-      razorpayOrder = await razorpay.orders.create(options);
-    }
+    const razorpay = getRazorpayClient();
+    const razorpayOrder = await razorpay.orders.create(options);
+    order.paymentInfo.razorpayOrderId = razorpayOrder.id;
+    await order.save();
     
     res.status(200).json(new ApiResponse('Razorpay order created', razorpayOrder));
   } catch (error) {
@@ -57,9 +82,13 @@ export const createRazorpayOrder = async (req: Request, res: Response, next: Nex
 // @desc    Verify Razorpay Payment
 // @route   POST /api/v1/payments/verify
 // @access  Private
-export const verifyPayment = async (req: Request, res: Response, next: NextFunction) => {
+export const verifyPayment = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const { razorpayOrderId, razorpayPaymentId, razorpaySignature, orderId } = req.body;
+
+    if (![razorpayOrderId, razorpayPaymentId, razorpaySignature, orderId].every(value => typeof value === 'string' && value.length > 0)) {
+      return next(new ApiError(400, 'Payment verification details are incomplete'));
+    }
 
     const order = await Order.findById(orderId).populate('user', 'email firstName');
 
@@ -67,24 +96,48 @@ export const verifyPayment = async (req: Request, res: Response, next: NextFunct
       return next(new ApiError(404, 'Order not found'));
     }
 
-    // Create signature for verification
-    const secret = process.env.RAZORPAY_KEY_SECRET || 'dummy_key_secret';
-    
-    let isSignatureValid = false;
-
-    if (process.env.RAZORPAY_KEY_ID === 'rzp_test_your_key_id' || !process.env.RAZORPAY_KEY_ID) {
-      if (razorpaySignature === 'mock_signature') {
-        isSignatureValid = true;
-      }
-    } else {
-      const generatedSignature = crypto
-        .createHmac('sha256', secret)
-        .update(`${razorpayOrderId}|${razorpayPaymentId}`)
-        .digest('hex');
-      isSignatureValid = generatedSignature === razorpaySignature;
+    if (order.user._id.toString() !== req.user._id.toString()) {
+      return next(new ApiError(403, 'Not authorized to verify payment for this order'));
     }
 
+    if (order.paymentInfo.razorpayOrderId !== razorpayOrderId) {
+      return next(new ApiError(400, 'Payment does not match this order'));
+    }
+
+    if (order.paymentInfo.status === 'COMPLETED') {
+      if (order.paymentInfo.razorpayPaymentId === razorpayPaymentId) {
+        return res.status(200).json(new ApiResponse('Payment already verified', order));
+      }
+      return next(new ApiError(409, 'This order has already been paid'));
+    }
+
+    if (order.paymentInfo.status !== 'PENDING') {
+      return next(new ApiError(409, 'This order is not awaiting payment'));
+    }
+
+    // Create signature for verification
+    const secret = process.env.RAZORPAY_KEY_SECRET;
+    if (!secret || !isRazorpayConfigured()) {
+      return next(new ApiError(503, 'Online payments are not configured'));
+    }
+    const generatedSignature = crypto
+      .createHmac('sha256', secret)
+      .update(`${razorpayOrderId}|${razorpayPaymentId}`)
+      .digest();
+    const receivedSignature = Buffer.from(razorpaySignature, 'hex');
+    const isSignatureValid = receivedSignature.length === generatedSignature.length &&
+      crypto.timingSafeEqual(generatedSignature, receivedSignature);
+
     if (isSignatureValid) {
+      const razorpay = getRazorpayClient();
+      const providerPayment = await razorpay.payments.fetch(razorpayPaymentId);
+      if (providerPayment.order_id !== razorpayOrderId ||
+          providerPayment.amount !== Math.round(order.pricing.total * 100) ||
+          providerPayment.currency !== 'INR' ||
+          providerPayment.status !== 'captured') {
+        return next(new ApiError(400, 'Payment is not captured for the expected order amount'));
+      }
+
       // Payment is successful
       order.paymentInfo.status = 'COMPLETED';
       order.paymentInfo.razorpayPaymentId = razorpayPaymentId;
@@ -136,43 +189,50 @@ export const verifyPayment = async (req: Request, res: Response, next: NextFunct
 // @access  Public
 export const razorpayWebhook = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const secret = process.env.RAZORPAY_WEBHOOK_SECRET || 'dummy_webhook_secret';
-    const signature = req.headers['x-razorpay-signature'] as string;
+    const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
+    if (!secret || secret === 'your_razorpay_webhook_secret') {
+      return res.status(503).send('Webhook is not configured');
+    }
 
-    const bodyStr = JSON.stringify(req.body);
+    const signature = req.headers['x-razorpay-signature'] as string;
+    const rawBody = (req as Request & { rawBody?: Buffer }).rawBody;
+    if (!signature || !rawBody) {
+      return res.status(400).send('Missing webhook signature or raw payload');
+    }
+
     const expectedSignature = crypto
       .createHmac('sha256', secret)
-      .update(bodyStr)
-      .digest('hex');
+      .update(rawBody)
+      .digest();
+    const receivedSignature = Buffer.from(signature, 'hex');
 
-    if (expectedSignature !== signature) {
+    if (receivedSignature.length !== expectedSignature.length || !crypto.timingSafeEqual(expectedSignature, receivedSignature)) {
       return res.status(400).send('Invalid signature');
     }
 
     const event = req.body.event;
 
     if (event === 'payment.captured' || event === 'order.paid') {
-      const paymentEntity = req.body.payload.payment.entity;
-      const orderId = paymentEntity.notes?.orderId || paymentEntity.order_id;
-      
-      // We need to find the order. Since Razorpay creates an order_id which is stored in Razorpay, 
-      // but in our DB we might not have it saved if it wasn't saved during create-order.
-      // Wait, in `createRazorpayOrder`, we don't save the `razorpayOrder.id` to the DB!
-      // But we passed `receipt_order_${order._id}` as the receipt. So we can extract it from the receipt!
-      const receipt = req.body.payload.order?.entity?.receipt || '';
-      let dbOrderId = '';
-      if (receipt && receipt.startsWith('receipt_order_')) {
-        dbOrderId = receipt.replace('receipt_order_', '');
+      const paymentEntity = req.body?.payload?.payment?.entity;
+      const providerOrderId = paymentEntity?.order_id || req.body?.payload?.order?.entity?.id;
+      if (!providerOrderId || !paymentEntity?.id) {
+        return res.status(400).send('Webhook payment details are incomplete');
       }
 
-      if (dbOrderId) {
-        const order = await Order.findById(dbOrderId);
-        if (order && order.paymentInfo.status !== 'COMPLETED') {
-          order.paymentInfo.status = 'COMPLETED';
-          order.paymentInfo.razorpayPaymentId = paymentEntity.id;
-          order.status = 'CONFIRMED';
-          await order.save();
-        }
+      const order = await Order.findOne({ 'paymentInfo.razorpayOrderId': providerOrderId });
+      if (!order) {
+        return res.status(404).send('Order not found for provider payment');
+      }
+
+      if (paymentEntity.amount !== Math.round(order.pricing.total * 100) || paymentEntity.currency !== 'INR') {
+        return res.status(400).send('Webhook payment amount or currency does not match the order');
+      }
+
+      if (order.paymentInfo.status === 'PENDING') {
+        order.paymentInfo.status = 'COMPLETED';
+        order.paymentInfo.razorpayPaymentId = paymentEntity.id;
+        order.status = 'CONFIRMED';
+        await order.save();
       }
     }
 

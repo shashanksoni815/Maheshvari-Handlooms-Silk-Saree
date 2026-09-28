@@ -8,24 +8,28 @@ export const Customers = () => {
   const [customers, setCustomers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const navigate = useNavigate();
   const { confirm } = useConfirmation();
-
-  useEffect(() => {
-    fetchCustomers();
-  }, []);
 
   const fetchCustomers = async () => {
     setIsLoading(true);
     try {
-      const res = await api.get('/admin/customers');
-      setCustomers(res.data.data);
+      const res = await api.get('/admin/customers', { params: { page: currentPage, limit: 50, search: searchTerm } });
+      setCustomers(res.data.data?.customers || []);
+      setTotalCount(res.data.data?.pagination?.total || 0);
     } catch (error) {
       console.error('Failed to fetch customers', error);
     } finally {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    const timer = window.setTimeout(fetchCustomers, 250);
+    return () => window.clearTimeout(timer);
+  }, [currentPage, searchTerm]);
 
   const handleToggleStatus = (customer: any) => {
     const newStatus = !customer.isActive;
@@ -45,12 +49,6 @@ export const Customers = () => {
       }
     });
   };
-
-  const filteredCustomers = customers.filter(c => 
-    (c.firstName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-    (c.lastName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-    (c.email?.toLowerCase() || '').includes(searchTerm.toLowerCase())
-  );
 
   const columns = [
     {
@@ -101,13 +99,13 @@ export const Customers = () => {
       </div>
 
       <AdminDataTable
-        data={filteredCustomers}
+        data={customers}
         columns={columns}
-        totalCount={filteredCustomers.length}
-        currentPage={1}
+        totalCount={totalCount}
+        currentPage={currentPage}
         pageSize={50}
-        onPageChange={() => {}}
-        onSearch={setSearchTerm}
+        onPageChange={setCurrentPage}
+        onSearch={(value) => { setCurrentPage(1); setSearchTerm(value); }}
         onView={(row) => navigate(`/admin/customers/${row._id}`)}
         isLoading={isLoading}
         searchPlaceholder="Search by name or email..."

@@ -2,20 +2,26 @@ import { Request, Response, NextFunction } from 'express';
 import { AuthRequest } from '../../middleware/auth';
 import Product from '../../models/Product';
 import InventoryTransaction from '../../models/InventoryTransaction';
+import mongoose from 'mongoose';
 import { ApiError } from '../../utils/apiError';
 import { ApiResponse } from '../../utils/apiResponse';
 
 export const adjustInventory = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const { productId, sku, type, quantity, reason } = req.body;
+    const { productId, type, quantity, reason } = req.body;
     const adminId = req.user?._id;
+    const quantityValue = Number(quantity);
 
-    if (!productId || !type || !quantity || !reason) {
+    if (!productId || !type || !Number.isSafeInteger(quantityValue) || !String(reason || '').trim()) {
       return next(new ApiError(400, 'Please provide all required fields for inventory adjustment'));
     }
 
-    if (quantity <= 0) {
-      return next(new ApiError(400, 'Quantity must be greater than zero'));
+    if (!mongoose.Types.ObjectId.isValid(String(productId))) {
+      return next(new ApiError(400, 'Invalid product ID'));
+    }
+
+    if (quantityValue <= 0) {
+      return next(new ApiError(400, 'Quantity must be a positive whole number'));
     }
 
     const product = await Product.findById(productId);
@@ -27,14 +33,14 @@ export const adjustInventory = async (req: AuthRequest, res: Response, next: Nex
     let afterStock = beforeStock;
 
     if (type === 'INCREASE') {
-      afterStock = beforeStock + quantity;
+      afterStock = beforeStock + quantityValue;
     } else if (type === 'DECREASE') {
-      afterStock = beforeStock - quantity;
+      afterStock = beforeStock - quantityValue;
       if (afterStock < 0) {
         return next(new ApiError(400, 'Cannot reduce stock below zero'));
       }
     } else if (type === 'SET') {
-      afterStock = quantity;
+      afterStock = quantityValue;
     } else {
       return next(new ApiError(400, 'Invalid adjustment type'));
     }
@@ -56,10 +62,10 @@ export const adjustInventory = async (req: AuthRequest, res: Response, next: Nex
       product: productId,
       sku: product.sku,
       type,
-      quantity,
+      quantity: quantityValue,
       beforeStock,
       afterStock,
-      reason,
+      reason: String(reason).trim(),
       admin: adminId
     });
 
@@ -73,8 +79,11 @@ export const getInventoryHistory = async (req: Request, res: Response, next: Nex
   try {
     const { productId } = req.query;
     
-    let filter = {};
+    let filter: Record<string, unknown> = {};
     if (productId) {
+      if (!mongoose.Types.ObjectId.isValid(String(productId))) {
+        return next(new ApiError(400, 'Invalid product ID'));
+      }
       filter = { product: productId };
     }
 

@@ -6,7 +6,7 @@ import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import { ApiError } from '../utils/apiError';
 import { ApiResponse } from '../utils/apiResponse';
-import sendEmail from '../utils/emailService';
+import sendEmail, { isEmailConfigured } from '../utils/emailService';
 
 export const register = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -68,6 +68,10 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     const user = await User.findOne({ email }).select('+password').populate('customRole');
     if (!user) {
       return next(new ApiError(401, 'Invalid credentials'));
+    }
+
+    if (user.isActive === false) {
+      return next(new ApiError(403, 'This account has been deactivated. Contact support if you believe this is an error.'));
     }
 
     const isMatch = await bcrypt.compare(password, user.password!);
@@ -172,7 +176,16 @@ export const refresh = async (req: Request, res: Response, next: NextFunction) =
 
 export const forgotPassword = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const user = await User.findOne({ email: req.body.email });
+    const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+    if (!email) {
+      return next(new ApiError(400, 'Please provide a valid email address'));
+    }
+
+    if (!isEmailConfigured()) {
+      return next(new ApiError(503, 'Password reset email is not configured. Set SMTP_HOST, SMTP_USER, SMTP_PASS, and FROM_EMAIL on the server.'));
+    }
+
+    const user = await User.findOne({ email });
     if (!user) {
       return next(new ApiError(404, 'There is no user with that email'));
     }
@@ -187,12 +200,13 @@ export const forgotPassword = async (req: Request, res: Response, next: NextFunc
     await user.save();
 
     // Create reset url
-    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/resetpassword/${resetToken}`;
+    const frontendUrl = (process.env.FRONTEND_URL || process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/$/, '');
+    const resetUrl = `${frontendUrl}/resetpassword/${resetToken}`;
 
     const message = `
       <h1>You have requested a password reset</h1>
       <p>Please go to this link to reset your password:</p>
-      <a href=${resetUrl} clicktracking=off>${resetUrl}</a>
+      <a href="${resetUrl}" clicktracking="off">${resetUrl}</a>
     `;
 
     try {
@@ -204,10 +218,11 @@ export const forgotPassword = async (req: Request, res: Response, next: NextFunc
 
       res.status(200).json(new ApiResponse('Email sent', {}));
     } catch (error) {
+      console.error('Password reset email delivery failed:', error instanceof Error ? error.message : 'Unknown mail transport error');
       user.resetPasswordToken = undefined as any;
       user.resetPasswordExpire = undefined as any;
       await user.save();
-      return next(new ApiError(500, 'Email could not be sent'));
+      return next(new ApiError(503, 'Password reset email could not be delivered. Check the server SMTP configuration and try again.'));
     }
   } catch (error) {
     next(error);

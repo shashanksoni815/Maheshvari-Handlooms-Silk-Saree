@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2, Package, Truck, CreditCard, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { ArrowLeft, Loader2, Package, Truck, CreditCard, Clock, CheckCircle, XCircle, Save } from 'lucide-react';
 import api from '../../services/api';
 import { useConfirmation } from '../../components/admin/ConfirmationModal';
 
@@ -10,6 +10,7 @@ export const OrderDetail = () => {
   const [order, setOrder] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [trackingForm, setTrackingForm] = useState({ courier: '', trackingId: '', trackingUrl: '', expectedDelivery: '' });
   const { confirm } = useConfirmation();
 
   useEffect(() => {
@@ -20,11 +21,31 @@ export const OrderDetail = () => {
     try {
       const res = await api.get(`/admin/orders/${id}`);
       setOrder(res.data.data);
+      const tracking = res.data.data.trackingInfo || {};
+      setTrackingForm({
+        courier: tracking.courier || '',
+        trackingId: tracking.trackingId || '',
+        trackingUrl: tracking.trackingUrl || '',
+        expectedDelivery: tracking.expectedDelivery ? new Date(tracking.expectedDelivery).toISOString().slice(0, 10) : '',
+      });
     } catch (error) {
       console.error('Failed to fetch order', error);
       navigate('/admin/orders');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleTrackingSave = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setIsUpdating(true);
+    try {
+      await api.put(`/admin/orders/${id}/tracking`, trackingForm);
+      await fetchOrder();
+    } catch (error: any) {
+      alert(error.response?.data?.message || 'Failed to save tracking details');
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -186,6 +207,23 @@ export const OrderDetail = () => {
                 <span className="font-bold text-primary text-base">₹{order.pricing?.total?.toLocaleString() || order.total?.toLocaleString()}</span>
               </div>
             </div>
+          </div>
+
+          <div className="bg-white rounded-md shadow-sm border border-supporting/50 overflow-hidden">
+            <div className="p-4 border-b border-supporting/50 bg-gray-50/50">
+              <h3 className="font-serif font-bold text-primary">Shipment Tracking</h3>
+            </div>
+            <form onSubmit={handleTrackingSave} className="p-4 space-y-3">
+              <input value={trackingForm.courier} onChange={e => setTrackingForm({ ...trackingForm, courier: e.target.value })} placeholder="Courier / carrier" className="w-full rounded-sm border border-supporting px-3 py-2 text-sm" />
+              <input value={trackingForm.trackingId} onChange={e => setTrackingForm({ ...trackingForm, trackingId: e.target.value })} placeholder="Tracking number" className="w-full rounded-sm border border-supporting px-3 py-2 text-sm" />
+              <input type="url" value={trackingForm.trackingUrl} onChange={e => setTrackingForm({ ...trackingForm, trackingUrl: e.target.value })} placeholder="Tracking URL (https://...)" className="w-full rounded-sm border border-supporting px-3 py-2 text-sm" />
+              <label className="block text-xs text-muted">Expected delivery
+                <input type="date" value={trackingForm.expectedDelivery} onChange={e => setTrackingForm({ ...trackingForm, expectedDelivery: e.target.value })} className="mt-1 w-full rounded-sm border border-supporting px-3 py-2 text-sm text-primary" />
+              </label>
+              <button type="submit" disabled={isUpdating} className="flex w-full items-center justify-center gap-2 bg-primary px-4 py-2 text-xs font-bold uppercase tracking-widest text-white disabled:opacity-50">
+                <Save className="h-4 w-4" /> Save Tracking
+              </button>
+            </form>
           </div>
         </div>
 

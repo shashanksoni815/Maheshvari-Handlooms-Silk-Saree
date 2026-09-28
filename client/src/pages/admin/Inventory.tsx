@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Package, Search, Plus, Minus, FileText } from 'lucide-react';
+import { Plus, Minus, FileText, History } from 'lucide-react';
 import api from '../../services/api';
 import { AdminDataTable } from '../../components/admin/AdminDataTable';
 import { useAuthStore } from '../../store/authStore';
@@ -8,21 +8,24 @@ export const Inventory = () => {
   const [products, setProducts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentProduct, setCurrentProduct] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [adjustment, setAdjustment] = useState({ type: 'INCREASE', quantity: 0, reason: '' });
+  const [history, setHistory] = useState<any[]>([]);
+  const [historyProduct, setHistoryProduct] = useState<any>(null);
   
   const { user } = useAuthStore();
 
   const fetchInventory = async () => {
     setIsLoading(true);
     try {
-      const response = await api.get('/products');
-      // Handle both paginated and non-paginated responses
-      const data = response.data.data;
-      setProducts(Array.isArray(data) ? data : data.products || []);
+      const response = await api.get('/admin/products', { params: { page: currentPage, limit: 50, search: searchTerm } });
+      setProducts(response.data.data?.products || []);
+      setTotalCount(response.data.data?.pagination?.total || 0);
     } catch (error) {
       console.error('Failed to fetch inventory', error);
     } finally {
@@ -31,13 +34,25 @@ export const Inventory = () => {
   };
 
   useEffect(() => {
-    fetchInventory();
-  }, []);
+    const timer = window.setTimeout(fetchInventory, 250);
+    return () => window.clearTimeout(timer);
+  }, [currentPage, searchTerm]);
 
   const openModal = (product: any) => {
     setCurrentProduct(product);
     setAdjustment({ type: 'INCREASE', quantity: 0, reason: '' });
     setIsModalOpen(true);
+  };
+
+  const openHistory = async (product: any) => {
+    setHistoryProduct(product);
+    try {
+      const response = await api.get('/admin/inventory/history', { params: { productId: product._id } });
+      setHistory(response.data.data || []);
+    } catch (error: any) {
+      alert(error.response?.data?.message || 'Failed to load inventory history');
+      setHistoryProduct(null);
+    }
   };
 
   const handleAdjustmentSubmit = async (e: React.FormEvent) => {
@@ -62,11 +77,6 @@ export const Inventory = () => {
       setIsSubmitting(false);
     }
   };
-
-  const filteredProducts = products.filter(p => 
-    p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    p.sku.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   const columns = [
     {
@@ -102,12 +112,20 @@ export const Inventory = () => {
     {
       header: 'Actions',
       accessor: (row: any) => (
-        <button 
-          onClick={() => openModal(row)}
-          className="text-accent hover:text-primary transition-colors flex items-center gap-1 text-sm font-semibold"
-        >
-          <FileText className="w-4 h-4" /> Adjust
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => openModal(row)}
+            className="text-accent hover:text-primary transition-colors flex items-center gap-1 text-sm font-semibold"
+          >
+            <FileText className="w-4 h-4" /> Adjust
+          </button>
+          <button
+            onClick={() => openHistory(row)}
+            className="text-secondary hover:text-primary transition-colors flex items-center gap-1 text-sm font-semibold"
+          >
+            <History className="w-4 h-4" /> History
+          </button>
+        </div>
       )
     }
   ];
@@ -122,13 +140,13 @@ export const Inventory = () => {
       </div>
 
       <AdminDataTable
-        data={filteredProducts}
+        data={products}
         columns={columns}
-        totalCount={filteredProducts.length}
-        currentPage={1}
+        totalCount={totalCount}
+        currentPage={currentPage}
         pageSize={50}
-        onPageChange={() => {}}
-        onSearch={setSearchTerm}
+        onPageChange={setCurrentPage}
+        onSearch={(value) => { setCurrentPage(1); setSearchTerm(value); }}
         isLoading={isLoading}
         searchPlaceholder="Search inventory by name or SKU..."
       />
@@ -173,6 +191,35 @@ export const Inventory = () => {
               </div>
             </form>
           </div>
+        </div>
+      )}
+
+      {historyProduct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setHistoryProduct(null)}>
+          <section className="w-full max-w-2xl max-h-[80vh] overflow-y-auto rounded-md bg-white p-6 shadow-2xl" onClick={event => event.stopPropagation()}>
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-serif font-bold text-primary">Stock History</h3>
+                <p className="text-sm text-muted">{historyProduct.name} · SKU {historyProduct.sku}</p>
+              </div>
+              <button onClick={() => setHistoryProduct(null)} className="text-sm font-semibold text-muted hover:text-primary">Close</button>
+            </div>
+            {history.length === 0 ? (
+              <p className="py-8 text-center text-sm text-muted">No inventory adjustments recorded.</p>
+            ) : (
+              <div className="divide-y divide-supporting">
+                {history.map((entry: any) => (
+                  <div key={entry._id} className="grid grid-cols-2 gap-3 py-3 text-sm sm:grid-cols-4">
+                    <span className="font-semibold text-primary">{entry.type} {entry.quantity}</span>
+                    <span className="text-secondary">{entry.beforeStock} → {entry.afterStock}</span>
+                    <span className="text-muted">{entry.admin?.firstName || 'Admin'} {entry.admin?.lastName || ''}</span>
+                    <span className="text-xs text-muted">{new Date(entry.createdAt).toLocaleString()}</span>
+                    <p className="col-span-2 text-xs text-secondary sm:col-span-4">{entry.reason}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
         </div>
       )}
     </div>

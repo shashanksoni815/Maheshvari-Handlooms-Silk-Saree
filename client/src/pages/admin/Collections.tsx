@@ -13,9 +13,8 @@ export const Collections = () => {
   const [currentCollection, setCurrentCollection] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const [formData, setFormData] = useState({ name: '', description: '', thumbnail: '', banner: '', isActive: true });
+  const [formData, setFormData] = useState({ name: '', description: '', bannerImage: '', isActive: true });
   const [isUploading, setIsUploading] = useState(false);
-  const thumbnailInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
   
   const { confirm } = useConfirmation();
@@ -23,7 +22,7 @@ export const Collections = () => {
   const fetchCollections = async () => {
     setIsLoading(true);
     try {
-      const response = await api.get('/collections');
+      const response = await api.get('/admin/collections');
       setCollections(response.data.data);
     } catch (error) {
       console.error('Failed to fetch collections', error);
@@ -41,14 +40,13 @@ export const Collections = () => {
     setFormData({
       name: collection?.name || '',
       description: collection?.description || '',
-      thumbnail: collection?.thumbnail || '',
-      banner: collection?.banner || '',
+      bannerImage: collection?.bannerImage || '',
       isActive: collection?.isActive ?? true
     });
     setIsModalOpen(true);
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, field: 'thumbnail' | 'banner') => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     setIsUploading(true);
     const formDataObj = new FormData();
@@ -56,7 +54,7 @@ export const Collections = () => {
 
     try {
       const res = await api.post('/uploads', formDataObj, { headers: { 'Content-Type': 'multipart/form-data' } });
-      setFormData(prev => ({ ...prev, [field]: res.data.data.url }));
+      setFormData(prev => ({ ...prev, bannerImage: res.data.data.url }));
     } catch (error) {
       console.error('Upload failed', error);
       alert('Failed to upload image');
@@ -108,7 +106,7 @@ export const Collections = () => {
       accessor: (row: any) => (
         <div className="flex items-center space-x-3">
           <div className="w-16 h-10 rounded-sm bg-supporting overflow-hidden flex-shrink-0">
-            {row.thumbnail && <img src={row.thumbnail} alt={row.name} className="w-full h-full object-cover" />}
+            {row.bannerImage && <img src={row.bannerImage} alt={row.name} className="w-full h-full object-cover" />}
           </div>
           <div className="font-semibold text-primary">{row.name}</div>
         </div>
@@ -180,23 +178,12 @@ export const Collections = () => {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Thumbnail</label>
                   <div className="flex flex-col gap-2">
-                    {formData.thumbnail && <img src={formData.thumbnail} alt="preview" className="w-full aspect-video object-cover rounded-sm border border-supporting" />}
-                    <button type="button" onClick={() => thumbnailInputRef.current?.click()} className="px-3 py-1.5 border border-supporting rounded-sm text-sm font-semibold flex items-center justify-center hover:bg-gray-50">
-                      {isUploading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <UploadCloud className="w-4 h-4 mr-2" />}
-                      Upload Thumbnail
-                    </button>
-                    <input type="file" ref={thumbnailInputRef} onChange={(e) => handleImageUpload(e, 'thumbnail')} accept="image/*" className="hidden" />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Banner</label>
-                  <div className="flex flex-col gap-2">
-                    {formData.banner && <img src={formData.banner} alt="preview" className="w-full aspect-video object-cover rounded-sm border border-supporting" />}
+                    {formData.bannerImage && <img src={formData.bannerImage} alt="preview" className="w-full aspect-video object-cover rounded-sm border border-supporting" />}
                     <button type="button" onClick={() => bannerInputRef.current?.click()} className="px-3 py-1.5 border border-supporting rounded-sm text-sm font-semibold flex items-center justify-center hover:bg-gray-50">
                       {isUploading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <UploadCloud className="w-4 h-4 mr-2" />}
-                      Upload Banner
+                      Upload Collection Image
                     </button>
-                    <input type="file" ref={bannerInputRef} onChange={(e) => handleImageUpload(e, 'banner')} accept="image/*" className="hidden" />
+                    <input type="file" ref={bannerInputRef} onChange={handleImageUpload} accept="image/*" className="hidden" />
                   </div>
                 </div>
               </div>

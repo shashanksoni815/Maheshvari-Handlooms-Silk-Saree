@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { lazy, Suspense, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, User, Heart, ShoppingBag } from 'lucide-react';
 import { useCartStore } from '../../../store/cartStore';
@@ -6,9 +6,10 @@ import { useWishlistStore } from '../../../store/wishlistStore';
 
 import { DesktopNavigation } from './DesktopNavigation';
 import { MobileHeader } from './MobileHeader';
-import { MobileMenu } from './MobileMenu';
-import { SearchOverlay } from './SearchOverlay';
 import { AccountDropdown } from './AccountDropdown';
+
+const MobileMenu = lazy(() => import('./MobileMenu').then(module => ({ default: module.MobileMenu })));
+const SearchOverlay = lazy(() => import('./SearchOverlay').then(module => ({ default: module.SearchOverlay })));
 
 export const LuxuryHeader = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -36,50 +37,45 @@ export const LuxuryHeader = () => {
   return (
     <>
       <header 
-        className={`sticky top-0 z-50 bg-background transition-all duration-300 ${
-          isScrolled ? 'border-b border-supporting/60 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)]' : 'border-b border-supporting/30'
+        className={`sticky top-0 z-50 bg-[#f8f1e4]/90 backdrop-blur-md transition-all duration-300 ${
+          isScrolled ? 'border-b border-[#d9c8a6] shadow-[0_8px_24px_-18px_rgba(6,63,53,0.45)]' : 'border-b border-[#e5d8bf]'
         }`}
       >
-        <div className="max-w-[1440px] mx-auto w-full">
-          {/* Desktop Header */}
-          <div className={`hidden lg:flex justify-between items-center px-8 transition-all duration-300 ${isScrolled ? 'h-[70px]' : 'h-[86px]'}`}>
-            
-            {/* Logo */}
-            <div className="w-[200px] flex-shrink-0">
-              <Link to="/">
-                <img src="/logo.png" alt="Maheshwari Silk Handloom Saree" className="h-14 lg:h-16 w-auto object-contain" />
+        <div className="mx-auto w-full max-w-[1600px]">
+          <div className={`hidden items-center justify-between px-6 transition-all duration-300 lg:flex ${isScrolled ? 'h-20' : 'h-24'}`}>
+            <div className="w-[200px] shrink-0">
+              <Link to="/" className="inline-flex items-center">
+                <img src="/logo.png" alt="Maheshwari Silk Handloom Saree" className="h-12 w-auto object-contain lg:h-14" />
               </Link>
             </div>
 
-            {/* Main Navigation */}
             <DesktopNavigation />
 
-            {/* Right Icons */}
-            <div className="w-[200px] flex justify-end items-center space-x-6 flex-shrink-0">
+            <div className="flex w-[200px] shrink-0 items-center justify-end gap-5">
               <button 
                 onClick={() => setIsSearchOpen(true)}
-                className="text-secondary hover:text-primary transition-colors"
+                className="text-[#29231D] hover:text-[#B58A3A] transition-colors"
                 aria-label="Search"
               >
-                <Search className="w-5 h-5" strokeWidth={1.5} />
+                <Search className="h-4 w-4" strokeWidth={1.8} />
               </button>
               
               <div className="relative">
                 <button 
                   onClick={() => setIsAccountOpen(!isAccountOpen)}
                   onMouseEnter={() => setIsAccountOpen(true)}
-                  className="text-secondary hover:text-primary transition-colors"
+                  className="text-[#29231D] hover:text-[#B58A3A] transition-colors"
                   aria-label="Account"
                 >
-                  <User className="w-5 h-5" strokeWidth={1.5} />
+                  <User className="h-4 w-4" strokeWidth={1.8} />
                 </button>
                 <AccountDropdown isOpen={isAccountOpen} onClose={() => setIsAccountOpen(false)} />
               </div>
 
-              <Link to="/wishlist" className="text-secondary hover:text-primary relative transition-colors" aria-label="Wishlist">
-                <Heart className="w-5 h-5" strokeWidth={1.5} />
+              <Link to="/wishlist" className="relative text-[#29231D] hover:text-[#B58A3A] transition-colors" aria-label="Wishlist">
+                <Heart className="h-4 w-4" strokeWidth={1.8} />
                 {wishlistCount > 0 && (
-                  <span className="absolute -top-1 -right-2 flex items-center justify-center min-w-[16px] h-[16px] px-1 text-[9px] font-bold text-white bg-accent rounded-full">
+                  <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#B58A3A] px-1 text-[9px] font-bold text-white">
                     {wishlistCount}
                   </span>
                 )}
@@ -87,12 +83,12 @@ export const LuxuryHeader = () => {
 
               <button 
                 onClick={toggleDrawer} 
-                className="text-secondary hover:text-primary relative transition-colors"
+                className="relative text-[#29231D] hover:text-[#B58A3A] transition-colors"
                 aria-label="Shopping Bag"
               >
-                <ShoppingBag className="w-5 h-5" strokeWidth={1.5} />
+                <ShoppingBag className="h-4 w-4" strokeWidth={1.8} />
                 {cartCount > 0 && (
-                  <span className="absolute -top-1 -right-2 flex items-center justify-center min-w-[16px] h-[16px] px-1 text-[9px] font-bold text-white bg-primary rounded-full">
+                  <span className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#063F35] px-1 text-[9px] font-bold text-white">
                     {cartCount}
                   </span>
                 )}
@@ -100,7 +96,6 @@ export const LuxuryHeader = () => {
             </div>
           </div>
 
-          {/* Mobile Header */}
           <MobileHeader 
             onMenuClick={() => setIsMobileMenuOpen(true)} 
             onSearchClick={() => setIsSearchOpen(true)} 
@@ -109,8 +104,16 @@ export const LuxuryHeader = () => {
       </header>
 
       {/* Overlays */}
-      <MobileMenu isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
-      <SearchOverlay isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+      {isMobileMenuOpen && (
+        <Suspense fallback={null}>
+          <MobileMenu isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
+        </Suspense>
+      )}
+      {isSearchOpen && (
+        <Suspense fallback={null}>
+          <SearchOverlay isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+        </Suspense>
+      )}
     </>
   );
 };

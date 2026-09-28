@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import Collection from '../models/Collection';
+import Product from '../models/Product';
 import { ApiError } from '../utils/apiError';
 import { ApiResponse } from '../utils/apiResponse';
 
@@ -81,6 +82,12 @@ export const updateCollection = async (req: Request, res: Response, next: NextFu
 
 export const deleteCollection = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const collectionId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    if (!collectionId) return next(new ApiError(404, 'Collection not found'));
+    const productCount = await Product.countDocuments({ collections: collectionId });
+    if (productCount > 0) {
+      return next(new ApiError(409, 'Cannot delete a collection that is assigned to products'));
+    }
     const collection = await Collection.findByIdAndDelete(req.params.id);
     
     if (!collection) {

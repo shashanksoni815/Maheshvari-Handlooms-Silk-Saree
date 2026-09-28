@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Plus, Loader2, X } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Plus, Loader2, X, UploadCloud } from 'lucide-react';
 import api from '../../services/api';
 import { AdminDataTable } from '../../components/admin/AdminDataTable';
 import { useConfirmation } from '../../components/admin/ConfirmationModal';
@@ -11,6 +11,8 @@ export const Banners = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentBanner, setCurrentBanner] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement>(null);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -84,6 +86,26 @@ export const Banners = () => {
     }
   };
 
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const uploadData = new FormData();
+    uploadData.append('image', file);
+    setIsUploading(true);
+    try {
+      const response = await api.post('/uploads', uploadData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      setFormData(previous => ({ ...previous, image: response.data.data.url }));
+    } catch (error: any) {
+      alert(error.response?.data?.message || 'Failed to upload banner image');
+    } finally {
+      setIsUploading(false);
+      event.target.value = '';
+    }
+  };
+
   const handleDelete = (banner: any) => {
     confirm({
       title: 'Delete Banner',
@@ -116,7 +138,7 @@ export const Banners = () => {
       accessor: (row: any) => (
         <div>
           <div className="text-xs font-bold font-mono bg-gray-100 px-2 py-1 rounded inline-block mb-1">{row.position}</div>
-          <div className="text-xs text-muted truncate max-w-[200px]" title={row.link}>{row.link}</div>
+          <div className="text-xs text-muted truncate max-w-50" title={row.link}>{row.link}</div>
         </div>
       )
     },
@@ -141,7 +163,7 @@ export const Banners = () => {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-serif text-primary">Banners & Promotions</h2>
-          <p className="text-sm text-muted mt-1">Manage homepage carousel and promotional banners</p>
+          <p className="text-sm text-muted mt-1">Add multiple active HOME_HERO banners; they rotate on the storefront every 1 second in sort order.</p>
         </div>
         <button 
           onClick={() => openModal()}
@@ -198,6 +220,11 @@ export const Banners = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Desktop Image URL *</label>
                 <input required type="url" value={formData.image} onChange={(e) => setFormData({...formData, image: e.target.value})} className="w-full px-3 py-2 border border-supporting rounded-sm focus:ring-1 focus:ring-accent" />
+                <input ref={imageInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/avif" onChange={handleImageUpload} className="hidden" />
+                <button type="button" onClick={() => imageInputRef.current?.click()} disabled={isUploading} className="mt-2 inline-flex items-center gap-2 border border-supporting px-3 py-2 text-xs font-semibold text-primary hover:bg-gray-50 disabled:opacity-60">
+                  {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <UploadCloud className="h-4 w-4" />}
+                  {isUploading ? 'Uploading…' : 'Upload image'}
+                </button>
                 {formData.image && <img src={formData.image} alt="Preview" className="mt-2 h-20 object-cover border border-gray-200 rounded" />}
               </div>
 

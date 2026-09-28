@@ -18,7 +18,7 @@ router.get('/:id', getCollectionById);
 
 // Admin routes
 router.use(protect);
-router.use(authorize('admin'));
+router.use(authorize('ADMIN', 'SUPER_ADMIN'));
 
 router.post('/', createCollection);
 router.put('/:id', updateCollection);

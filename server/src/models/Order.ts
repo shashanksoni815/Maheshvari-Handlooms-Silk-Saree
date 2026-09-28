@@ -47,6 +47,7 @@ export interface IOrder extends Document {
     reason: string;
     refundedAt: Date;
     refundedBy: mongoose.Types.ObjectId;
+    providerRefundId?: string;
   };
   orderNotes?: string;
   createdAt: Date;
@@ -115,6 +116,7 @@ const OrderSchema: Schema = new Schema(
       reason: String,
       refundedAt: Date,
       refundedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+      providerRefundId: String,
     },
     orderNotes: String,
   },

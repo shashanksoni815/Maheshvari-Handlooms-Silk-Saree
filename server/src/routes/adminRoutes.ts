@@ -17,6 +17,7 @@ import adminUserRoutes from './admin/adminUserRoutes';
 import adminRoleRoutes from './admin/adminRoleRoutes';
 import adminAuditLogRoutes from './admin/adminAuditLogRoutes';
 import adminSettingRoutes from './admin/adminSettingRoutes';
+import { getAdminDashboard, getAdminReports } from '../controllers/admin/adminAnalyticsController';
 const router = Router();
 
 // All routes here are protected and require at least 'ADMIN' role initially (though authorizePermission handles specific capabilities)
@@ -33,6 +34,8 @@ router.use('/coupons', adminCouponRoutes);
 router.use('/blog', adminBlogRoutes);
 router.use('/cms', adminCmsRoutes);
 router.use('/banners', adminBannerRoutes);
+router.get('/dashboard', authorizePermission('dashboard.read'), getAdminDashboard);
+router.get('/reports', authorizePermission('reports.read'), getAdminReports);
 
 // Super Admin restricted routes
 router.use('/admin-users', authorizePermission('super.admin'), adminUserRoutes);

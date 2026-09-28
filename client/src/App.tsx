@@ -2,6 +2,7 @@ import React, { Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ConfirmationModalProvider } from './components/admin/ConfirmationModal';
 import { AdminRoute } from './features/auth/AdminRoute';
+import { AdminPermissionRoute } from './features/auth/AdminPermissionRoute';
 import { AdminLayout } from './layouts/AdminLayout';
 import { StorefrontLayout } from './layouts/StorefrontLayout';
 import { ProtectedRoute } from './features/auth/ProtectedRoute';
@@ -117,28 +118,28 @@ const App = () => {
         {/* Admin Routes */}
         <Route path="/admin" element={<AdminRoute />}>
           <Route element={<AdminLayout />}>
-            <Route index element={<Dashboard />} />
-            <Route path="products" element={<Products />} />
-            <Route path="products/new" element={<ProductForm />} />
-            <Route path="products/:id/edit" element={<ProductForm />} />
-            <Route path="orders" element={<Orders />} />
-            <Route path="orders/:id" element={<OrderDetail />} />
-            <Route path="categories" element={<Categories />} />
-            <Route path="collections" element={<AdminCollections />} />
-            <Route path="inventory" element={<Inventory />} />
-            <Route path="customers" element={<Customers />} />
-            <Route path="customers/:id" element={<CustomerDetail />} />
-            <Route path="reviews" element={<Reviews />} />
-            <Route path="coupons" element={<Coupons />} />
-            <Route path="blog" element={<Blog />} />
-            <Route path="banners" element={<Banners />} />
-            <Route path="cms" element={<CMSManager />} />
-            <Route path="reports" element={<Reports />} />
+            <Route index element={<AdminPermissionRoute permission="dashboard.read"><Dashboard /></AdminPermissionRoute>} />
+            <Route path="products" element={<AdminPermissionRoute permission="products.read"><Products /></AdminPermissionRoute>} />
+            <Route path="products/new" element={<AdminPermissionRoute permission="products.create"><ProductForm /></AdminPermissionRoute>} />
+            <Route path="products/:id/edit" element={<AdminPermissionRoute permission="products.update"><ProductForm /></AdminPermissionRoute>} />
+            <Route path="orders" element={<AdminPermissionRoute permission="orders.read"><Orders /></AdminPermissionRoute>} />
+            <Route path="orders/:id" element={<AdminPermissionRoute permission="orders.read"><OrderDetail /></AdminPermissionRoute>} />
+            <Route path="categories" element={<AdminPermissionRoute permission="categories.read"><Categories /></AdminPermissionRoute>} />
+            <Route path="collections" element={<AdminPermissionRoute permission="collections.read"><AdminCollections /></AdminPermissionRoute>} />
+            <Route path="inventory" element={<AdminPermissionRoute permission="inventory.read"><Inventory /></AdminPermissionRoute>} />
+            <Route path="customers" element={<AdminPermissionRoute permission="customers.read"><Customers /></AdminPermissionRoute>} />
+            <Route path="customers/:id" element={<AdminPermissionRoute permission="customers.read"><CustomerDetail /></AdminPermissionRoute>} />
+            <Route path="reviews" element={<AdminPermissionRoute permission="reviews.read"><Reviews /></AdminPermissionRoute>} />
+            <Route path="coupons" element={<AdminPermissionRoute permission="coupons.read"><Coupons /></AdminPermissionRoute>} />
+            <Route path="blog" element={<AdminPermissionRoute permission="blog.read"><Blog /></AdminPermissionRoute>} />
+            <Route path="banners" element={<AdminPermissionRoute permission="banners.read"><Banners /></AdminPermissionRoute>} />
+            <Route path="cms" element={<AdminPermissionRoute permission="cms.read"><CMSManager /></AdminPermissionRoute>} />
+            <Route path="reports" element={<AdminPermissionRoute permission="reports.read"><Reports /></AdminPermissionRoute>} />
             {/* Super Admin Routes */}
-            <Route path="admin-users" element={<AdminUsers />} />
-            <Route path="audit-logs" element={<AuditLogs />} />
-            <Route path="roles" element={<Roles />} />
-            <Route path="settings" element={<Settings />} />
+            <Route path="admin-users" element={<AdminPermissionRoute permission="super.admin"><AdminUsers /></AdminPermissionRoute>} />
+            <Route path="audit-logs" element={<AdminPermissionRoute permission="super.admin"><AuditLogs /></AdminPermissionRoute>} />
+            <Route path="roles" element={<AdminPermissionRoute permission="super.admin"><Roles /></AdminPermissionRoute>} />
+            <Route path="settings" element={<AdminPermissionRoute permission="super.admin"><Settings /></AdminPermissionRoute>} />
           </Route>
         </Route>
 

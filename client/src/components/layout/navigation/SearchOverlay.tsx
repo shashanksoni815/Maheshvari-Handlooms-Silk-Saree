@@ -80,7 +80,7 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
-          className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-sm flex flex-col"
+          className="fixed inset-0 z-100 bg-background/95 backdrop-blur-sm flex flex-col"
         >
           <div className="flex-1 overflow-y-auto w-full max-w-4xl mx-auto px-4 sm:px-6 py-12 md:py-24">
             <button 
@@ -151,7 +151,7 @@ export const SearchOverlay: React.FC<SearchOverlayProps> = ({ isOpen, onClose })
                             onClick={onClose}
                             className="group flex flex-col gap-3"
                           >
-                            <div className="aspect-[3/4] bg-supporting/20 overflow-hidden">
+                            <div className="aspect-3/4 bg-supporting/20 overflow-hidden">
                               <img 
                                 src={product.images?.[0] || "https://images.unsplash.com/photo-1610189013994-46323c91db10?auto=format&fit=crop&w=400&q=80"} 
                                 alt={product.name}

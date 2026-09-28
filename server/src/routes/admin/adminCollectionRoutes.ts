@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { authorizePermission } from '../../middleware/auth';
 import { auditLog } from '../../middleware/audit';
 import {
+  getCollections,
   createCollection,
   updateCollection,
   deleteCollection,
@@ -9,6 +10,7 @@ import {
 
 const router = Router();
 
+router.get('/', authorizePermission('collections.read'), getCollections);
 router.post('/', authorizePermission('collections.create'), auditLog('CREATE', 'COLLECTION'), createCollection);
 router.put('/:id', authorizePermission('collections.update'), auditLog('UPDATE', 'COLLECTION'), updateCollection);
 router.delete('/:id', authorizePermission('collections.delete'), auditLog('DELETE', 'COLLECTION'), deleteCollection);

@@ -9,6 +9,13 @@ import AuditLog from '../models/AuditLog';
  */
 export const auditLog = (action: string, resource: string) => {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
+    let responseBody: any;
+    const originalJson = res.json.bind(res);
+    res.json = ((body: any) => {
+      responseBody = body;
+      return originalJson(body);
+    }) as Response['json'];
+
     // Listen for the response to finish
     res.on('finish', async () => {
       // Only log if the request was successful and user is authenticated
@@ -18,14 +25,14 @@ export const auditLog = (action: string, resource: string) => {
         if (Array.isArray(resourceId)) {
           resourceId = resourceId[0];
         }
-        const finalResourceId = resourceId as string | undefined;
-        
-        // For CREATE, we might have the created document's ID in the response, but intercepting it is tricky.
-        // We will try to extract it from req.body if it's there (unlikely), or just leave it blank.
-        
-        // We can capture the request body (excluding passwords) as details
+        const responseData = responseBody?.data;
+        const createdId = responseData?._id || responseData?.id;
+        const finalResourceId = (resourceId || createdId) as string | undefined;
+
         const details = { ...req.body };
-        if (details.password) delete details.password;
+        for (const key of Object.keys(details)) {
+          if (/password|secret|token|api.?key/i.test(key)) delete details[key];
+        }
 
         try {
           const payload: any = {
