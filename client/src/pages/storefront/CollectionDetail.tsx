@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Loader2, ArrowLeft } from 'lucide-react';
+import { Loader2, ArrowLeft, Sparkles, Tag } from 'lucide-react';
+import { motion } from 'framer-motion';
 import api from '../../services/api';
 import { ProductCard } from '../../components/product/ProductCard';
 
@@ -33,17 +34,20 @@ export const CollectionDetail = () => {
   if (isCollectionLoading) {
     return (
       <div className="min-h-screen flex justify-center items-center bg-background">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <Loader2 className="w-10 h-10 animate-spin text-primary" />
       </div>
     );
   }
 
   if (collectionError || !collection) {
     return (
-      <div className="min-h-[70vh] flex flex-col justify-center items-center bg-background">
-        <h1 className="text-3xl font-serif text-primary mb-4">Collection Not Found</h1>
-        <button onClick={() => navigate('/collections')} className="text-xs uppercase tracking-widest text-accent hover:underline underline-offset-4">
-          Return to Collections
+      <div className="min-h-[70vh] flex flex-col justify-center items-center bg-background text-center px-4">
+        <h1 className="text-3xl font-serif text-primary mb-4 font-bold">Collection Not Found</h1>
+        <button 
+          onClick={() => navigate('/collections')} 
+          className="inline-flex items-center gap-2 bg-primary text-white px-8 py-3.5 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-accent hover:text-primary transition-all shadow-md"
+        >
+          <ArrowLeft className="w-4 h-4" /> Return to Collections
         </button>
       </div>
     );
@@ -52,63 +56,84 @@ export const CollectionDetail = () => {
   return (
     <div className="bg-background min-h-screen">
       {/* Campaign Hero */}
-      <div className="relative h-[60vh] md:h-[70vh] w-full overflow-hidden">
-        <div className="absolute inset-0 bg-black/40 z-10" />
+      <div className="relative h-[65vh] md:h-[75vh] w-full overflow-hidden bg-primary text-white">
+        <div className="absolute inset-0 bg-gradient-to-t from-primary via-primary/40 to-transparent z-10" />
         <img 
           src={collection.bannerImage || `https://images.unsplash.com/photo-1610030469983-98e550d6193c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80`} 
           alt={collection.name} 
           className="w-full h-full object-cover object-center"
         />
-        <div className="absolute inset-0 z-20 flex flex-col justify-center items-center text-white px-4 text-center">
-          <span className="text-xs uppercase tracking-[0.3em] font-bold mb-4 drop-shadow-md text-white/90">
-            The Campaign
+        
+        {/* Watermark */}
+        <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none select-none overflow-hidden">
+          <span className="text-[16vw] font-extrabold tracking-tighter text-white/5 uppercase leading-none font-serif">
+            EDIT
           </span>
-          <h1 className="text-5xl md:text-7xl font-serif mb-6 drop-shadow-lg leading-tight">
+        </div>
+
+        <div className="absolute inset-0 z-20 flex flex-col justify-center items-center text-white px-4 text-center max-w-4xl mx-auto">
+          <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+            <span className="inline-flex items-center gap-2 border border-amber-300/30 bg-amber-300/10 px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-[0.3em] text-amber-300 backdrop-blur-md mb-6">
+              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+              The Campaign Edit
+            </span>
+          </motion.div>
+          
+          <motion.h1 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="text-4xl sm:text-6xl md:text-7xl font-serif mb-6 drop-shadow-lg leading-tight font-bold"
+          >
             {collection.name}
-          </h1>
+          </motion.h1>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <Link to="/collections" className="inline-flex items-center text-xs font-bold uppercase tracking-widest text-amber-300 hover:text-white transition-colors">
+              <ArrowLeft className="w-4 h-4 mr-2" /> All Collections
+            </Link>
+          </motion.div>
         </div>
       </div>
 
       {/* Story Section */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-16 md:py-24 text-center">
-        <p className="text-lg md:text-xl text-secondary font-serif leading-relaxed italic">
-          "{collection.description}"
-        </p>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-16 md:py-20 text-center">
+        <div className="p-8 rounded-3xl bg-white border border-supporting/60 shadow-sm">
+          <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-accent block mb-3">Collection Curator Note</span>
+          <p className="text-base md:text-lg text-secondary font-serif leading-relaxed italic">
+            "{collection.description}"
+          </p>
+        </div>
       </div>
 
       {/* Products Grid */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
         <div className="flex items-center justify-between border-b border-supporting pb-4 mb-12">
-          <h2 className="text-2xl font-serif text-primary">Explore The Collection</h2>
-          <span className="text-xs font-bold uppercase tracking-widest text-secondary">{products.length} Pieces</span>
+          <h2 className="text-2xl font-serif font-bold text-primary">Explore The Pieces</h2>
+          <span className="text-xs font-bold uppercase tracking-widest text-amber-800 bg-amber-50 px-3.5 py-1 rounded-full border border-amber-200">
+            {products.length} Designs
+          </span>
         </div>
 
         {isProductsLoading ? (
           <div className="flex justify-center py-20">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            <Loader2 className="w-10 h-10 animate-spin text-primary" />
           </div>
         ) : products.length === 0 ? (
-          <div className="text-center py-20">
-            <p className="text-lg text-secondary">No products available in this collection yet.</p>
+          <div className="text-center py-20 bg-white rounded-3xl border border-supporting/60">
+            <p className="text-base text-secondary font-serif">No products currently available in this collection edit.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-x-3 gap-y-8 sm:gap-x-6 sm:gap-y-12">
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-8 sm:gap-x-6 sm:gap-y-12">
             {products.map((product: any) => (
               <ProductCard key={product._id} product={product} />
             ))}
           </div>
         )}
-      </div>
-      
-      {/* Footer CTA */}
-      <div className="border-t border-supporting py-16 text-center bg-supporting/5">
-        <Link 
-          to="/collections" 
-          className="inline-flex items-center text-xs font-bold uppercase tracking-widest text-primary hover:text-accent transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to all collections
-        </Link>
       </div>
     </div>
   );

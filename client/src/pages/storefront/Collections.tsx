@@ -1,7 +1,17 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Loader2 } from 'lucide-react';
+import { ArrowRight, Loader2, Sparkles } from 'lucide-react';
+import { motion } from 'framer-motion';
 import api from '../../services/api';
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 24 },
+  visible: (i: number = 0) => ({
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, delay: i * 0.1 },
+  }),
+};
 
 export const Collections = () => {
   const { data, isLoading, error } = useQuery({
@@ -17,16 +27,18 @@ export const Collections = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen flex justify-center items-center bg-background">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <Loader2 className="w-10 h-10 animate-spin text-primary" />
       </div>
     );
   }
 
   if (error || collections.length === 0) {
     return (
-      <div className="min-h-[70vh] flex flex-col justify-center items-center bg-background">
-        <h1 className="text-3xl font-serif text-primary mb-4">No Collections Found</h1>
-        <Link to="/shop" className="text-xs uppercase tracking-widest text-accent hover:underline underline-offset-4">
+      <div className="min-h-[70vh] flex flex-col justify-center items-center bg-background p-6 text-center">
+        <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-accent mb-2">Heritage Edits</span>
+        <h1 className="text-3xl font-serif font-bold text-primary mb-2">No Collections Found</h1>
+        <p className="text-secondary text-xs sm:text-sm mb-6">Our master weavers are preparing upcoming seasonal edits.</p>
+        <Link to="/shop" className="bg-primary text-white px-8 py-3.5 rounded-full text-xs font-bold uppercase tracking-widest shadow-md hover:bg-accent hover:text-primary transition-all">
           Explore All Sarees
         </Link>
       </div>
@@ -34,53 +46,98 @@ export const Collections = () => {
   }
 
   return (
-    <div className="bg-background min-h-screen">
+    <div className="bg-background min-h-screen text-primary">
+      
       {/* Hero Section */}
-      <div className="bg-supporting/10 pt-20 pb-16 px-4 text-center border-b border-supporting/30 mb-12">
-        <h1 className="text-4xl md:text-5xl font-serif text-primary mb-6 tracking-wide">Curated Collections</h1>
-        <p className="max-w-2xl mx-auto text-secondary font-serif italic text-lg leading-relaxed">
-          "Each collection is a tribute to the artisans who weave magic into six yards of silk. Discover stories crafted in pure handloom."
-        </p>
+      <div className="relative bg-primary text-white overflow-hidden py-24 sm:py-32 px-4 sm:px-6 lg:px-8">
+        <div 
+          className="absolute inset-0 bg-cover bg-center opacity-20 mix-blend-overlay filter blur-[1px]"
+          style={{ backgroundImage: `url('https://images.unsplash.com/photo-1583391733959-b52d9a334ece?auto=format&fit=crop&q=80&w=1600')` }}
+        />
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden">
+          <span className="text-[18vw] font-extrabold tracking-tighter text-white/5 uppercase leading-none font-serif">
+            EDITS
+          </span>
+        </div>
+
+        <div className="relative max-w-4xl mx-auto text-center z-10">
+          <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+            <span className="inline-flex items-center gap-1.5 bg-white/10 backdrop-blur-md text-amber-300 text-[10px] font-bold uppercase tracking-[0.3em] px-4 py-1.5 rounded-full border border-white/20 mb-6">
+              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+              Bespoke Handloom Edits
+            </span>
+          </motion.div>
+          <motion.h1 
+            initial={{ opacity: 0, y: 20 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="text-4xl sm:text-6xl lg:text-7xl font-serif font-bold tracking-tight text-white mb-6"
+          >
+            Curated Collections
+          </motion.h1>
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="text-cream/90 max-w-2xl mx-auto text-sm sm:text-base font-medium leading-relaxed"
+          >
+            Each collection is a tribute to the master weavers who craft stories into six yards of pure silk.
+          </motion.p>
+        </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24 space-y-24">
+      {/* Collections List Grid */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-16">
         {collections.map((collection: any, index: number) => {
           const isEven = index % 2 === 0;
           
           return (
-            <div key={collection._id} className={`flex flex-col ${isEven ? 'md:flex-row' : 'md:flex-row-reverse'} gap-8 md:gap-16 items-center`}>
-              {/* Image Side */}
-              <div className="w-full md:w-1/2">
-                <Link to={`/collections/${collection.slug}`} className="block relative aspect-[4/5] overflow-hidden group">
-                  <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors z-10 duration-700" />
-                  <img 
-                    src={collection.bannerImage || `https://images.unsplash.com/photo-1583391733959-b52d9a334ece?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80`} 
-                    alt={collection.name} 
-                    className="w-full h-full object-cover object-top transition-transform duration-1000 group-hover:scale-105"
-                  />
-                </Link>
-              </div>
+            <motion.div 
+              key={collection._id}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              custom={index}
+              variants={fadeUp}
+              className="bg-white rounded-3xl p-6 sm:p-10 border border-supporting/60 shadow-sm hover:shadow-xl transition-all duration-300"
+            >
+              <div className={`flex flex-col ${isEven ? 'lg:flex-row' : 'lg:flex-row-reverse'} gap-8 lg:gap-12 items-center`}>
+                
+                {/* Image Side */}
+                <div className="w-full lg:w-1/2">
+                  <Link to={`/collections/${collection.slug}`} className="block relative aspect-[4/3] sm:aspect-[16/10] rounded-2xl overflow-hidden group border border-supporting/50">
+                    <img 
+                      src={collection.bannerImage || collection.image || `https://images.unsplash.com/photo-1583391733959-b52d9a334ece?auto=format&fit=crop&w=800&q=80`} 
+                      alt={collection.name} 
+                      className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-primary/80 via-transparent to-transparent opacity-80 group-hover:opacity-60 transition-opacity" />
+                  </Link>
+                </div>
 
-              {/* Text Side */}
-              <div className="w-full md:w-1/2 flex flex-col justify-center items-start">
-                <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-accent mb-4 block">
-                  {collection.isFeatured ? 'Featured Collection' : 'Curated'}
-                </span>
-                <h2 className="text-3xl md:text-4xl font-serif text-primary mb-6 leading-tight">
-                  {collection.name}
-                </h2>
-                <p className="text-secondary leading-relaxed mb-10 max-w-lg">
-                  {collection.description}
-                </p>
-                <Link 
-                  to={`/collections/${collection.slug}`}
-                  className="group flex items-center text-xs font-bold uppercase tracking-widest text-primary border-b border-primary pb-1 hover:text-accent hover:border-accent transition-colors"
-                >
-                  Explore Collection 
-                  <ArrowRight className="w-4 h-4 ml-2 transform group-hover:translate-x-1 transition-transform" />
-                </Link>
+                {/* Content Side */}
+                <div className="w-full lg:w-1/2 flex flex-col justify-center items-start lg:px-4">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-amber-800 bg-amber-50 px-3.5 py-1.5 rounded-full border border-amber-200/80 mb-4">
+                    {collection.isFeatured ? 'Featured Heritage Edit' : 'Handloom Series'}
+                  </span>
+                  
+                  <h2 className="text-3xl sm:text-4xl font-serif font-bold tracking-tight text-primary mb-4">
+                    {collection.name}
+                  </h2>
+
+                  <p className="text-secondary text-xs sm:text-sm leading-relaxed mb-8 max-w-lg">
+                    {collection.description}
+                  </p>
+
+                  <Link 
+                    to={`/collections/${collection.slug}`}
+                    className="inline-flex items-center gap-2 bg-primary text-white px-8 py-3.5 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-accent hover:text-primary transition-all shadow-md"
+                  >
+                    Explore Edit <ArrowRight className="w-4 h-4" />
+                  </Link>
+                </div>
               </div>
-            </div>
+            </motion.div>
           );
         })}
       </div>

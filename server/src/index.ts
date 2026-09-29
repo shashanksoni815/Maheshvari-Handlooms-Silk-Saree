@@ -83,6 +83,7 @@ app.use('/api/v1/collections', collectionRoutes); // Mount collectionRoutes
 app.use('/api/v1/uploads', uploadRoutes);
 app.use('/api/v1/orders', orderRoutes);
 app.use('/api/v1/payments', paymentRoutes);
+app.use('/api', paymentRoutes);
 app.use('/api/v1/addresses', addressRoutes);
 app.use('/api/v1/blogs', blogRoutes);
 app.use('/api/v1/coupons', couponRoutes);

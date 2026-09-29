@@ -30,7 +30,7 @@ const getRazorpayClient = () => {
 };
 
 // @desc    Create Razorpay Order
-// @route   POST /api/v1/payments/create-order/:orderId
+// @route   POST /api/create-order OR POST /api/v1/payments/create-order OR POST /api/v1/payments/create-order/:orderId
 // @access  Private
 export const createRazorpayOrder = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -38,153 +38,186 @@ export const createRazorpayOrder = async (req: Request, res: Response, next: Nex
       return next(new ApiError(503, 'Online payments are not configured'));
     }
 
-    const order = await Order.findById(req.params.orderId);
+    const orderIdParam = req.params.orderId || req.body.orderId || req.body.order_id;
+    let amountInPaise: number | null = null;
+    let currency = req.body.currency || 'INR';
+    let receipt = req.body.receipt || `receipt_${Date.now()}`;
+    let order: any = null;
 
-    if (!order) {
-      return next(new ApiError(404, 'Order not found'));
+    if (orderIdParam) {
+      order = await Order.findById(orderIdParam);
+
+      if (!order) {
+        return next(new ApiError(404, 'Order not found'));
+      }
+
+      // Check authorization
+      const userId = (req as any).user?._id;
+      if (userId && order.user.toString() !== userId.toString()) {
+        return next(new ApiError(403, 'Not authorized for this order'));
+      }
+
+      if (order.paymentInfo.status !== 'PENDING') {
+        return next(new ApiError(409, 'This order is not awaiting payment'));
+      }
+
+      amountInPaise = Math.round(order.pricing.total * 100);
+      receipt = `receipt_order_${order._id}`;
+
+      if (order.paymentInfo.razorpayOrderId) {
+        return res.status(200).json(new ApiResponse('Razorpay order already created', {
+          order_id: order.paymentInfo.razorpayOrderId,
+          id: order.paymentInfo.razorpayOrderId,
+          amount: amountInPaise,
+          currency: 'INR',
+        }));
+      }
+    } else if (req.body.amount) {
+      amountInPaise = Math.round(Number(req.body.amount));
     }
 
-    // Check authorization
-    if (order.user.toString() !== (req as any).user._id.toString()) {
-      return next(new ApiError(403, 'Not authorized'));
+    if (!amountInPaise || isNaN(amountInPaise)) {
+      return next(new ApiError(400, 'Amount is required and must be a valid number'));
     }
 
-    if (order.paymentInfo.status !== 'PENDING') {
-      return next(new ApiError(409, 'This order is not awaiting payment'));
-    }
-
-    if (order.paymentInfo.razorpayOrderId) {
-      return res.status(200).json(new ApiResponse('Razorpay order already created', {
-        id: order.paymentInfo.razorpayOrderId,
-        amount: Math.round(order.pricing.total * 100),
-        currency: 'INR',
-      }));
+    // Minimum amount validation: 100 paise (₹1)
+    if (amountInPaise < 100) {
+      return next(new ApiError(400, 'Minimum order amount must be at least 100 paise (₹1)'));
     }
 
     const options = {
-      amount: Math.round(order.pricing.total * 100), // Amount in smallest currency unit (paise)
-      currency: 'INR',
-      receipt: `receipt_order_${order._id}`,
+      amount: amountInPaise,
+      currency: currency,
+      receipt: receipt,
     };
 
     const razorpay = getRazorpayClient();
     const razorpayOrder = await razorpay.orders.create(options);
-    order.paymentInfo.razorpayOrderId = razorpayOrder.id;
-    await order.save();
-    
-    res.status(200).json(new ApiResponse('Razorpay order created', razorpayOrder));
-  } catch (error) {
-    console.error('Razorpay Error:', error);
-    next(new ApiError(500, 'Error creating Razorpay order'));
+
+    if (order) {
+      order.paymentInfo.razorpayOrderId = razorpayOrder.id;
+      await order.save();
+    }
+
+    res.status(200).json(new ApiResponse('Razorpay order created successfully', {
+      order_id: razorpayOrder.id,
+      id: razorpayOrder.id,
+      amount: razorpayOrder.amount,
+      currency: razorpayOrder.currency,
+      receipt: razorpayOrder.receipt,
+      data: razorpayOrder,
+    }));
+  } catch (error: any) {
+    console.error('Razorpay Order Creation Error:', error);
+    if (error.statusCode === 401 || error?.error?.code === 'BAD_REQUEST_ERROR') {
+      return next(new ApiError(401, error.message || 'Razorpay authentication failed'));
+    }
+    next(new ApiError(500, error.message || 'Error creating Razorpay order'));
   }
 };
 
-// @desc    Verify Razorpay Payment
-// @route   POST /api/v1/payments/verify
+// @desc    Verify Razorpay Payment Signature
+// @route   POST /api/verify-payment OR POST /api/v1/payments/verify OR POST /api/v1/payments/verify-payment
 // @access  Private
 export const verifyPayment = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const { razorpayOrderId, razorpayPaymentId, razorpaySignature, orderId } = req.body;
+    const razorpay_order_id = req.body.razorpay_order_id || req.body.razorpayOrderId;
+    const razorpay_payment_id = req.body.razorpay_payment_id || req.body.razorpayPaymentId;
+    const razorpay_signature = req.body.razorpay_signature || req.body.razorpaySignature;
+    const orderId = req.body.orderId || req.body.order_id;
 
-    if (![razorpayOrderId, razorpayPaymentId, razorpaySignature, orderId].every(value => typeof value === 'string' && value.length > 0)) {
-      return next(new ApiError(400, 'Payment verification details are incomplete'));
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+      return next(new ApiError(400, 'Payment verification details are incomplete (razorpay_order_id, razorpay_payment_id, and razorpay_signature are required)'));
     }
 
-    const order = await Order.findById(orderId).populate('user', 'email firstName');
-
-    if (!order) {
-      return next(new ApiError(404, 'Order not found'));
-    }
-
-    if (order.user._id.toString() !== req.user._id.toString()) {
-      return next(new ApiError(403, 'Not authorized to verify payment for this order'));
-    }
-
-    if (order.paymentInfo.razorpayOrderId !== razorpayOrderId) {
-      return next(new ApiError(400, 'Payment does not match this order'));
-    }
-
-    if (order.paymentInfo.status === 'COMPLETED') {
-      if (order.paymentInfo.razorpayPaymentId === razorpayPaymentId) {
-        return res.status(200).json(new ApiResponse('Payment already verified', order));
-      }
-      return next(new ApiError(409, 'This order has already been paid'));
-    }
-
-    if (order.paymentInfo.status !== 'PENDING') {
-      return next(new ApiError(409, 'This order is not awaiting payment'));
-    }
-
-    // Create signature for verification
     const secret = process.env.RAZORPAY_KEY_SECRET;
     if (!secret || !isRazorpayConfigured()) {
       return next(new ApiError(503, 'Online payments are not configured'));
     }
+
+    // Algorithm: HMAC-SHA256(order_id + "|" + payment_id, KEY_SECRET)
     const generatedSignature = crypto
       .createHmac('sha256', secret)
-      .update(`${razorpayOrderId}|${razorpayPaymentId}`)
-      .digest();
-    const receivedSignature = Buffer.from(razorpaySignature, 'hex');
-    const isSignatureValid = receivedSignature.length === generatedSignature.length &&
-      crypto.timingSafeEqual(generatedSignature, receivedSignature);
+      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+      .digest('hex');
 
-    if (isSignatureValid) {
-      const razorpay = getRazorpayClient();
-      const providerPayment = await razorpay.payments.fetch(razorpayPaymentId);
-      if (providerPayment.order_id !== razorpayOrderId ||
-          providerPayment.amount !== Math.round(order.pricing.total * 100) ||
-          providerPayment.currency !== 'INR' ||
-          providerPayment.status !== 'captured') {
-        return next(new ApiError(400, 'Payment is not captured for the expected order amount'));
+    const isSignatureValid = generatedSignature === razorpay_signature;
+
+    if (!isSignatureValid) {
+      return next(new ApiError(400, 'Payment verification failed: Signature mismatch'));
+    }
+
+    // If orderId or razorpay_order_id is in DB, update order state
+    let updatedOrder: any = null;
+    const searchId = orderId || null;
+    const query = searchId 
+      ? { _id: searchId } 
+      : { 'paymentInfo.razorpayOrderId': razorpay_order_id };
+
+    const order = await Order.findOne(query).populate('user', 'email firstName');
+
+    if (order) {
+      if (order.paymentInfo.status === 'COMPLETED') {
+        return res.status(200).json(new ApiResponse('Payment already verified', {
+          success: true,
+          order,
+          razorpay_order_id,
+          razorpay_payment_id,
+        }));
       }
 
-      // Payment is successful
       order.paymentInfo.status = 'COMPLETED';
-      order.paymentInfo.razorpayPaymentId = razorpayPaymentId;
-      order.paymentInfo.razorpaySignature = razorpaySignature;
+      order.paymentInfo.razorpayPaymentId = razorpay_payment_id;
+      order.paymentInfo.razorpaySignature = razorpay_signature;
       order.status = 'CONFIRMED';
-
-      const updatedOrder = await order.save();
+      updatedOrder = await order.save();
 
       // Send Invoice Email
-      try {
-        const invoiceHtml = `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
-            <h2 style="color: #6C2237;">Payment Successful!</h2>
-            <p>Dear ${(order.user as any).firstName},</p>
-            <p>Thank you for your purchase from Maheshwari Handloom Silk Saree. Your payment for Order <strong>#${order.orderNumber}</strong> has been successfully processed.</p>
-            
-            <div style="background-color: #f9f9f9; padding: 20px; border-radius: 5px; margin: 20px 0;">
-              <h3 style="margin-top: 0; border-bottom: 1px solid #ddd; padding-bottom: 10px;">Order Summary</h3>
-              <p><strong>Total Amount:</strong> ₹${order.pricing.total.toLocaleString('en-IN')}</p>
-              <p><strong>Payment Method:</strong> ${order.paymentInfo.method}</p>
-              <p><strong>Payment Status:</strong> COMPLETED</p>
+      if (order.user && (order.user as any).email) {
+        try {
+          const invoiceHtml = `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+              <h2 style="color: #063F35;">Payment Successful!</h2>
+              <p>Dear ${(order.user as any).firstName},</p>
+              <p>Thank you for your purchase from Maheshwari Handloom Silk Saree. Your payment for Order <strong>#${order.orderNumber}</strong> has been successfully processed.</p>
+              
+              <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #e5d8bf;">
+                <h3 style="margin-top: 0; border-bottom: 1px solid #ddd; padding-bottom: 10px; color: #063F35;">Order Summary</h3>
+                <p><strong>Total Amount:</strong> ₹${order.pricing.total.toLocaleString('en-IN')}</p>
+                <p><strong>Payment Method:</strong> Razorpay</p>
+                <p><strong>Payment Status:</strong> COMPLETED</p>
+                <p><strong>Transaction ID:</strong> ${razorpay_payment_id}</p>
+              </div>
+              
+              <p>We are now preparing your handwoven saree and will notify you once it's shipped.</p>
+              <p>Best Regards,<br/>Maheshwari Handloom Silk Saree Team</p>
             </div>
-            
-            <p>We are now processing your order and will notify you once it's shipped.</p>
-            <p>Best Regards,<br/>Maheshwari Handloom Silk Saree Team</p>
-          </div>
-        `;
-        await sendEmail({
-          email: (order.user as any).email,
-          subject: `Invoice for Order #${order.orderNumber}`,
-          html: invoiceHtml,
-        });
-      } catch (err) {
-        console.error('Invoice email failed to send:', err);
+          `;
+          await sendEmail({
+            email: (order.user as any).email,
+            subject: `Invoice for Order #${order.orderNumber}`,
+            html: invoiceHtml,
+          });
+        } catch (err) {
+          console.error('Invoice email notification error:', err);
+        }
       }
-
-      res.status(200).json(new ApiResponse('Payment verified successfully', updatedOrder));
-    } else {
-      return next(new ApiError(400, 'Payment verification failed: Invalid signature'));
     }
-  } catch (error) {
-    console.error('Payment Verify Error:', error);
-    next(new ApiError(500, 'Error verifying payment'));
+
+    res.status(200).json(new ApiResponse('Payment verified successfully', {
+      success: true,
+      message: 'Payment verified successfully',
+      razorpay_order_id,
+      razorpay_payment_id,
+      order: updatedOrder || order,
+    }));
+  } catch (error: any) {
+    console.error('Payment Verification Error:', error);
+    next(new ApiError(500, error.message || 'Error verifying payment'));
   }
 };
 
-// @desc    Razorpay Webhook (Direct & Secure Server-to-Server Payment Completion)
+// @desc    Razorpay Webhook (Direct Server-to-Server Verification)
 // @route   POST /api/v1/payments/webhook
 // @access  Public
 export const razorpayWebhook = async (req: Request, res: Response, next: NextFunction) => {
@@ -203,11 +236,10 @@ export const razorpayWebhook = async (req: Request, res: Response, next: NextFun
     const expectedSignature = crypto
       .createHmac('sha256', secret)
       .update(rawBody)
-      .digest();
-    const receivedSignature = Buffer.from(signature, 'hex');
+      .digest('hex');
 
-    if (receivedSignature.length !== expectedSignature.length || !crypto.timingSafeEqual(expectedSignature, receivedSignature)) {
-      return res.status(400).send('Invalid signature');
+    if (signature !== expectedSignature) {
+      return res.status(400).send('Invalid webhook signature');
     }
 
     const event = req.body.event;
@@ -225,7 +257,7 @@ export const razorpayWebhook = async (req: Request, res: Response, next: NextFun
       }
 
       if (paymentEntity.amount !== Math.round(order.pricing.total * 100) || paymentEntity.currency !== 'INR') {
-        return res.status(400).send('Webhook payment amount or currency does not match the order');
+        return res.status(400).send('Webhook payment amount or currency does not match order');
       }
 
       if (order.paymentInfo.status === 'PENDING') {

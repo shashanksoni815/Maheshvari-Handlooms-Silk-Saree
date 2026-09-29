@@ -99,12 +99,12 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({ product }) 
 
   return (
     <div 
-      className="group relative flex flex-col bg-[#F6F6F8] hover:bg-[#EFF0F3] rounded-[2rem] p-3.5 sm:p-4 border border-neutral-200/60 transition-all duration-300 shadow-sm hover:shadow-xl"
+      className="group relative flex flex-col bg-[#F6F6F8] hover:bg-[#EFF0F3] rounded-[2rem] p-3 sm:p-4 border border-neutral-200/60 transition-all duration-300 shadow-sm hover:shadow-xl w-full max-w-full box-border overflow-hidden"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Product Image Frame */}
-      <div className="relative aspect-square sm:aspect-4/3 w-full overflow-hidden rounded-[1.5rem] bg-white flex items-center justify-center">
+      {/* Product Image Frame (Tall Portrait for Full Model View) */}
+      <div className="relative aspect-[3/4] w-full overflow-hidden rounded-[1.5rem] bg-white flex items-center justify-center">
         <Link to={`/product/${product._id}`} className="block w-full h-full">
           <img
             src={product.images[0]?.url || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=800'}

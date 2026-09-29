@@ -1,5 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { ShieldCheck, Mail, ArrowLeft, FileText, Sparkles } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface PolicySection {
   title: string;
@@ -13,24 +15,67 @@ interface PolicyPageProps {
 }
 
 const PolicyPage = ({ title, lastUpdated, sections }: PolicyPageProps) => (
-  <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-    <div className="mb-10 border-b border-gray-200 pb-8">
-      <h1 className="text-3xl md:text-4xl font-serif text-primary mb-3">{title}</h1>
-      <p className="text-sm text-gray-500">Last updated: {lastUpdated}</p>
+  <div className="bg-background min-h-screen">
+    {/* Dark Primary Hero */}
+    <div className="relative bg-primary text-white py-20 px-4 sm:px-6 lg:px-8 overflow-hidden text-center">
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden">
+        <span className="text-[18vw] font-extrabold tracking-tighter text-white/5 uppercase leading-none font-serif">
+          POLICY
+        </span>
+      </div>
+
+      <div className="relative max-w-3xl mx-auto z-10">
+        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+          <span className="inline-flex items-center gap-2 border border-amber-300/30 bg-amber-300/10 px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-[0.3em] text-amber-300 backdrop-blur-md mb-6">
+            <FileText className="w-3.5 h-3.5 text-amber-300" />
+            Client Assurance & Terms
+          </span>
+        </motion.div>
+
+        <motion.h1 
+          initial={{ opacity: 0, y: 20 }} 
+          animate={{ opacity: 1, y: 0 }} 
+          transition={{ duration: 0.6, delay: 0.1 }}
+          className="text-4xl md:text-5xl font-serif text-white font-bold mb-4"
+        >
+          {title}
+        </motion.h1>
+
+        <motion.p 
+          initial={{ opacity: 0, y: 20 }} 
+          animate={{ opacity: 1, y: 0 }} 
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="text-xs text-amber-300 uppercase tracking-widest font-semibold"
+        >
+          Last updated: {lastUpdated}
+        </motion.p>
+      </div>
     </div>
-    <div className="space-y-8 text-secondary leading-relaxed">
-      {sections.map((section) => (
-        <div key={section.title}>
-          <h2 className="text-lg font-medium text-primary mb-3">{section.title}</h2>
-          <p className="text-sm">{section.content}</p>
+
+    {/* Policy Content Card */}
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 -mt-10 relative z-20">
+      <div className="bg-white rounded-3xl p-8 sm:p-12 border border-supporting/60 shadow-xl space-y-10">
+        <div className="space-y-8 text-secondary leading-relaxed">
+          {sections.map((section, idx) => (
+            <div key={section.title} className="border-b border-supporting/40 pb-6 last:border-0 last:pb-0">
+              <h2 className="text-xl font-serif font-bold text-primary mb-3 flex items-center gap-2">
+                <span className="text-amber-600 text-sm font-sans font-bold">0{idx + 1}.</span> {section.title}
+              </h2>
+              <p className="text-sm sm:text-base leading-relaxed text-secondary">{section.content}</p>
+            </div>
+          ))}
         </div>
-      ))}
-    </div>
-    <div className="mt-12 pt-8 border-t border-gray-200 text-sm text-gray-500">
-      Questions? Contact us at{' '}
-      <a href="mailto:care@maheshwarisilk.com" className="text-primary hover:underline">
-        care@maheshwarisilk.com
-      </a>
+
+        <div className="pt-8 border-t border-supporting flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-semibold text-secondary">
+          <div className="flex items-center gap-2 text-primary">
+            <ShieldCheck className="w-4 h-4 text-emerald-600" />
+            <span>Questions regarding this policy?</span>
+          </div>
+          <a href="mailto:care@maheshwarisilk.com" className="inline-flex items-center gap-2 bg-primary/10 text-primary px-5 py-2.5 rounded-full border border-primary/20 hover:bg-primary hover:text-white transition-colors">
+            <Mail className="w-3.5 h-3.5 text-accent" /> care@maheshwarisilk.com
+          </a>
+        </div>
+      </div>
     </div>
   </div>
 );
@@ -42,7 +87,7 @@ export const ShippingPolicy = () => (
     sections={[
       {
         title: 'Free Shipping',
-        content: 'We offer complimentary shipping on all orders above ₹10,000 within India. Orders below ₹10,000 are shipped at a flat rate of ₹500.',
+        content: 'We offer complimentary shipping on all orders above ₹10,000 within India. Orders below ₹10,000 are shipped at a flat rate of ₹250.',
       },
       {
         title: 'Processing Time',
