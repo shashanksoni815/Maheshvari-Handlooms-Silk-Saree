@@ -19,6 +19,7 @@ import collectionRoutes from './routes/collectionRoutes';
 import reviewRoutes from './routes/reviewRoutes';
 import bannerRoutes from './routes/bannerRoutes';
 import adminRoutes from './routes/adminRoutes';
+import { ApiError } from './utils/apiError';
 
 dotenv.config();
 dotenv.config({ path: '.env.local', override: true });
@@ -47,23 +48,34 @@ app.use(express.json({
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// CORS configuration - allow frontend origins
-const allowedOrigins = [
+// CORS configuration uses exact origins; CORS_ORIGINS supports multiple deployed clients.
+const normalizeOrigin = (value?: string) => {
+  if (!value) return '';
+  try {
+    return new URL(value.trim()).origin;
+  } catch {
+    return '';
+  }
+};
+
+const allowedOrigins = new Set([
   'http://localhost:5173',
   'http://localhost:3000',
+  'https://maheshwari-frontend.vercel.app',
   process.env.CLIENT_URL,
   process.env.FRONTEND_URL,
-].filter(Boolean) as string[];
+  ...(process.env.CORS_ORIGINS || '').split(','),
+].map(normalizeOrigin).filter(Boolean));
 
 app.use(
   cors({
     origin: (origin, callback) => {
       // Allow requests with no origin (mobile apps, curl, Postman)
       if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin)) {
+      if (allowedOrigins.has(normalizeOrigin(origin))) {
         return callback(null, true);
       }
-      callback(new Error(`CORS policy: origin ${origin} not allowed`));
+      callback(new ApiError(403, `CORS policy: origin ${origin} not allowed`));
     },
     credentials: true,
   })
