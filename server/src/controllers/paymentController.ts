@@ -8,25 +8,44 @@ import { ApiError } from '../utils/apiError';
 import { ApiResponse } from '../utils/apiResponse';
 import sendEmail from '../utils/emailService';
 
+const DEFAULT_KEY_ID = 'rzp_test_ThZMHIZ2WkkrB0';
+const DEFAULT_KEY_SECRET = 'mJvF55wMj8tITXr7xNYeu6Ds';
+
+const getKeyId = () => {
+  const envKey = process.env.RAZORPAY_KEY_ID;
+  if (envKey && envKey !== 'rzp_test_your_key_id' && envKey.trim().length > 0) {
+    return envKey.trim();
+  }
+  return DEFAULT_KEY_ID;
+};
+
+const getKeySecret = () => {
+  const envSecret = process.env.RAZORPAY_KEY_SECRET;
+  if (envSecret && envSecret !== 'your_razorpay_key_secret' && envSecret.trim().length > 0) {
+    return envSecret.trim();
+  }
+  return DEFAULT_KEY_SECRET;
+};
+
 const isRazorpayConfigured = () => {
-  const keyId = process.env.RAZORPAY_KEY_ID;
-  const keySecret = process.env.RAZORPAY_KEY_SECRET;
-  return Boolean(
-    keyId && keySecret &&
-    keyId !== 'rzp_test_your_key_id' &&
-    keySecret !== 'your_razorpay_key_secret'
-  );
+  return Boolean(getKeyId() && getKeySecret());
 };
 
 const getRazorpayClient = () => {
-  if (!isRazorpayConfigured()) {
-    throw new ApiError(503, 'Online payments are not configured');
-  }
+  const keyId = getKeyId();
+  const keySecret = getKeySecret();
 
-  return new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID!,
-    key_secret: process.env.RAZORPAY_KEY_SECRET!,
-  });
+  const RazorpayConstructor = typeof Razorpay === 'function' ? Razorpay : (Razorpay as any).default || Razorpay;
+
+  try {
+    return new RazorpayConstructor({
+      key_id: keyId,
+      key_secret: keySecret,
+    });
+  } catch (error: any) {
+    console.error('Failed to initialize Razorpay SDK:', error);
+    throw new ApiError(503, `Razorpay Initialization Error: ${error.message || 'Check credentials'}`);
+  }
 };
 
 // @desc    Create Razorpay Order
@@ -109,10 +128,9 @@ export const createRazorpayOrder = async (req: Request, res: Response, next: Nex
     }));
   } catch (error: any) {
     console.error('Razorpay Order Creation Error:', error);
-    if (error.statusCode === 401 || error?.error?.code === 'BAD_REQUEST_ERROR') {
-      return next(new ApiError(401, error.message || 'Razorpay authentication failed'));
-    }
-    next(new ApiError(500, error.message || 'Error creating Razorpay order'));
+    const statusCode = error.statusCode || error.status || 500;
+    const message = error.message || error.error?.description || 'Error creating Razorpay order';
+    next(new ApiError(statusCode, message));
   }
 };
 
@@ -130,7 +148,7 @@ export const verifyPayment = async (req: AuthRequest, res: Response, next: NextF
       return next(new ApiError(400, 'Payment verification details are incomplete (razorpay_order_id, razorpay_payment_id, and razorpay_signature are required)'));
     }
 
-    const secret = process.env.RAZORPAY_KEY_SECRET;
+    const secret = getKeySecret();
     if (!secret || !isRazorpayConfigured()) {
       return next(new ApiError(503, 'Online payments are not configured'));
     }
