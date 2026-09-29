@@ -62,6 +62,7 @@ const allowedOrigins = new Set([
   'http://localhost:5173',
   'http://localhost:3000',
   'https://maheshwari-frontend.vercel.app',
+  'https://maheshwari-frontend-orcin.vercel.app',
   process.env.CLIENT_URL,
   process.env.FRONTEND_URL,
   ...(process.env.CORS_ORIGINS || '').split(','),
