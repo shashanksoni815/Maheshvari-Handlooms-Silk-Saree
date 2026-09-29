@@ -1,7 +1,14 @@
 import axios from 'axios';
 
+const PROD_API = 'https://maheshwari-backend.vercel.app/api/v1';
+const API_BASE = import.meta.env.VITE_API_URL
+  ? import.meta.env.VITE_API_URL
+  : (typeof window !== 'undefined' && window.location.hostname !== 'localhost')
+    ? PROD_API
+    : 'http://localhost:5000/api/v1';
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1',
+  baseURL: API_BASE,
   withCredentials: true, // For sending cookies (refresh token)
 });
 
@@ -36,7 +43,7 @@ api.interceptors.response.use(
       originalRequest._retry = true;
       try {
         const refreshResponse = await axios.post(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1'}/auth/refresh`,
+          `${API_BASE}/auth/refresh`,
           {},
           { withCredentials: true }
         );
