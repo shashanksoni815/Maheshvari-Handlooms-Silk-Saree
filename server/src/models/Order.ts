@@ -118,7 +118,7 @@ const OrderSchema: Schema = new Schema(
       shippedAt: Date,
       expectedDelivery: Date,
     },
-    adminUpdates: {
+    adminUpdates: [{
       type: { type: String, enum: ['STATUS', 'TRACKING', 'REFUND'], required: true },
       status: {
         type: String,
@@ -136,7 +136,7 @@ const OrderSchema: Schema = new Schema(
       },
       updatedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
       updatedAt: { type: Date, default: Date.now, required: true },
-    },
+    }],
     isRefunded: { type: Boolean, default: false },
     refundDetails: {
       amount: Number,
