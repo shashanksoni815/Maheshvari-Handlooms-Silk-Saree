@@ -14,16 +14,11 @@ export interface CartItem {
 interface CartState {
   items: CartItem[];
   isDrawerOpen: boolean;
-  couponCode: string | null;
-  couponDiscount: number; // Percentage or flat
   
   addItem: (item: CartItem) => void;
   removeItem: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
-  
-  applyCoupon: (code: string, discount: number) => void;
-  removeCoupon: () => void;
   
   toggleDrawer: () => void;
   openDrawer: () => void;
@@ -31,7 +26,6 @@ interface CartState {
   
   getTotalItems: () => number;
   getSubtotal: () => number;
-  getDiscountTotal: () => number;
   getTaxTotal: () => number;
   getShippingTotal: () => number;
   getGrandTotal: () => number;
@@ -42,8 +36,6 @@ export const useCartStore = create<CartState>()(
     (set, get) => ({
       items: [],
       isDrawerOpen: false,
-      couponCode: null,
-      couponDiscount: 0,
 
       addItem: (item) => {
         set((state) => {
@@ -79,10 +71,7 @@ export const useCartStore = create<CartState>()(
         }));
       },
 
-      clearCart: () => set({ items: [], couponCode: null, couponDiscount: 0 }),
-      
-      applyCoupon: (code, discount) => set({ couponCode: code, couponDiscount: discount }),
-      removeCoupon: () => set({ couponCode: null, couponDiscount: 0 }),
+      clearCart: () => set({ items: [] }),
 
       toggleDrawer: () => set((state) => ({ isDrawerOpen: !state.isDrawerOpen })),
       openDrawer: () => set({ isDrawerOpen: true }),
@@ -96,28 +85,19 @@ export const useCartStore = create<CartState>()(
         return get().items.reduce((total, item) => total + item.price * item.quantity, 0);
       },
       
-      getDiscountTotal: () => {
-        const subtotal = get().getSubtotal();
-        return (subtotal * get().couponDiscount) / 100;
-      },
-      
       getTaxTotal: () => {
-        // Assume 5% GST on silk sarees for example
-        const afterDiscount = get().getSubtotal() - get().getDiscountTotal();
-        return afterDiscount * 0.05;
+        return 0;
       },
       
       getShippingTotal: () => {
-        const afterDiscount = get().getSubtotal() - get().getDiscountTotal();
-        return afterDiscount > 10000 || afterDiscount === 0 ? 0 : 250;
+        return 0;
       },
       
       getGrandTotal: () => {
         const subtotal = get().getSubtotal();
-        const discount = get().getDiscountTotal();
         const tax = get().getTaxTotal();
         const shipping = get().getShippingTotal();
-        return subtotal - discount + tax + shipping;
+        return subtotal + tax + shipping;
       }
     }),
     {
@@ -125,13 +105,9 @@ export const useCartStore = create<CartState>()(
       partialize: (state) => ({ 
         items: state.items,
       }),
-      // Ignore previously persisted browser-only coupon discounts. A discount
-      // must be validated by the server before it can affect checkout totals.
       merge: (persistedState, currentState) => ({
         ...currentState,
         items: (persistedState as Partial<CartState> | undefined)?.items || [],
-        couponCode: null,
-        couponDiscount: 0,
       }),
     }
   )

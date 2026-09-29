@@ -1,7 +1,7 @@
 import { useAuthStore } from '../../store/authStore';
 import { useWishlistStore } from '../../store/wishlistStore';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Package, ExternalLink, Trash2, MapPin, Heart, Star } from 'lucide-react';
+import { Package, Trash2, MapPin, Heart, Star, Truck, CheckCircle2, Clock3, ExternalLink } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../../services/api';
 
@@ -124,9 +124,14 @@ export const AccountOrders = () => {
                 </td>
                 <td className="py-6 px-4 text-right text-primary font-medium text-lg">₹{order.pricing?.total?.toLocaleString('en-IN')}</td>
                 <td className="py-6 pl-4 text-right">
-                  <Link to={`/account/orders/${order._id}`} className="inline-flex items-center justify-center border border-primary text-primary hover:bg-primary hover:text-white px-5 py-2 text-[10px] font-bold uppercase tracking-widest transition-colors rounded-sm">
-                    View Details
-                  </Link>
+                  <div className="inline-flex flex-wrap justify-end gap-2">
+                    <Link to={`/account/orders/${order._id}/track`} className="inline-flex items-center justify-center gap-1 border border-primary bg-primary text-white hover:bg-primary/90 px-4 py-2 text-[10px] font-bold uppercase tracking-widest transition-colors rounded-sm">
+                      <Truck className="h-3.5 w-3.5" /> Track
+                    </Link>
+                    <Link to={`/account/orders/${order._id}`} className="inline-flex items-center justify-center border border-primary text-primary hover:bg-primary hover:text-white px-4 py-2 text-[10px] font-bold uppercase tracking-widest transition-colors rounded-sm">
+                      Details
+                    </Link>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -313,6 +318,178 @@ export const AccountOrderDetails = () => {
           </div>
         </div>
       </div>
+    </div>
+  );
+};
+
+const trackingSteps = [
+  { status: 'PENDING', title: 'Order placed', description: 'Your order has been received.' },
+  { status: 'CONFIRMED', title: 'Payment confirmed', description: 'Your order is confirmed and ready for preparation.' },
+  { status: 'PROCESSING', title: 'Being prepared', description: 'Our team is preparing your saree with care.' },
+  { status: 'SHIPPED', title: 'Shipped', description: 'Your parcel is on its way.' },
+  { status: 'OUT_FOR_DELIVERY', title: 'Out for delivery', description: 'Your parcel is with the local delivery team.' },
+  { status: 'DELIVERED', title: 'Delivered', description: 'Your order has been delivered.' },
+];
+
+export const AccountOrderTracking = () => {
+  const { orderId } = useParams();
+  const navigate = useNavigate();
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['order-tracking', orderId],
+    queryFn: async () => (await api.get(`/orders/${orderId}`)).data,
+    enabled: Boolean(orderId),
+    refetchInterval: 15000,
+    refetchOnWindowFocus: true,
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[400px] flex-col items-center justify-center p-10">
+        <div className="mb-4 h-10 w-10 animate-spin rounded-full border-4 border-accent border-t-transparent" />
+        <p className="text-xs font-medium uppercase tracking-widest text-secondary">Loading shipment updates</p>
+      </div>
+    );
+  }
+
+  const order = data?.data;
+  if (isError || !order) {
+    return (
+      <div className="flex min-h-[400px] flex-col items-center justify-center p-10 text-center">
+        <Package className="mb-4 h-10 w-10 text-accent" />
+        <h2 className="mb-2 font-serif text-2xl text-primary">Tracking unavailable</h2>
+        <p className="mb-6 max-w-sm text-sm text-secondary">We couldn't load this order. Return to your orders and try again.</p>
+        <button onClick={() => navigate('/account/orders')} className="bg-primary px-6 py-3 text-xs font-bold uppercase tracking-widest text-white">Back to Orders</button>
+      </div>
+    );
+  }
+
+  const orderStatus = typeof order.status === 'string' ? order.status : 'PENDING';
+  const tracking = order.trackingInfo && typeof order.trackingInfo === 'object' ? order.trackingInfo : {};
+  const updates = (Array.isArray(order.adminUpdates) ? [...order.adminUpdates] : []).sort(
+    (left: any, right: any) => new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime()
+  );
+  const currentStep = trackingSteps.findIndex(step => step.status === orderStatus);
+  const trackingUrl = /^https?:\/\//i.test(tracking.trackingUrl || '') ? tracking.trackingUrl : '';
+  const formatDate = (value?: string) => value
+    ? new Date(value).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })
+    : null;
+
+  return (
+    <div className="p-6 md:p-12">
+      <div className="mb-8 border-b border-supporting/30 pb-6">
+        <button onClick={() => navigate('/account/orders')} className="mb-4 text-[10px] font-bold uppercase tracking-widest text-muted hover:text-accent">
+          &larr; Back to Orders
+        </button>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-accent">Shipment tracking</p>
+            <h1 className="font-serif text-3xl text-primary">Order {order.orderNumber}</h1>
+            <p className="mt-2 text-sm text-secondary">Placed {new Date(order.createdAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+          </div>
+          <span className="rounded-full border border-supporting bg-white px-4 py-2 text-xs font-bold uppercase tracking-widest text-primary">
+            {orderStatus.replace(/_/g, ' ')}
+          </span>
+        </div>
+        <p className="mt-4 flex items-center gap-2 text-xs text-muted">
+          <Clock3 className="h-4 w-4" /> Updates refresh automatically. Last order update: {formatDate(order.updatedAt) || 'Not available'}
+        </p>
+      </div>
+
+      {orderStatus === 'CANCELLED' ? (
+        <div className="mb-8 border border-red-200 bg-red-50 p-5 text-sm text-red-800">
+          <strong className="block font-serif text-lg">This order was cancelled.</strong>
+        </div>
+      ) : (
+        <section className="mb-10" aria-label="Order progress">
+          <h2 className="mb-6 text-xs font-bold uppercase tracking-widest text-muted">Order progress</h2>
+          <ol className="grid gap-0 md:grid-cols-6">
+            {trackingSteps.map((step, index) => {
+              const complete = currentStep >= index;
+              const active = currentStep === index;
+              return (
+                <li key={step.status} className="relative flex gap-4 border-l border-supporting pb-6 pl-5 last:border-0 md:flex-col md:border-l-0 md:pb-0 md:pl-0 md:pr-3">
+                  <span className={`absolute -left-[9px] top-0 flex h-4 w-4 items-center justify-center rounded-full md:static md:mb-3 ${complete ? 'bg-primary text-white' : 'bg-supporting text-muted'}`}>
+                    {complete ? <CheckCircle2 className="h-4 w-4" /> : <span className="h-1.5 w-1.5 rounded-full bg-white" />}
+                  </span>
+                  <div className="-mt-1 md:mt-0">
+                    <p className={`text-xs font-bold ${active ? 'text-primary' : complete ? 'text-secondary' : 'text-muted'}`}>{step.title}</p>
+                    <p className="mt-1 text-[11px] leading-relaxed text-muted">{step.description}</p>
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
+        </section>
+      )}
+
+      {order.isRefunded && order.refundDetails && (
+        <div className="mb-8 border border-amber-200 bg-amber-50 p-5 text-sm text-amber-950">
+          <strong className="block font-serif text-lg">Refund issued</strong>
+          <span>₹{order.refundDetails.amount?.toLocaleString('en-IN')} · {formatDate(order.refundDetails.refundedAt)}</span>
+          {order.refundDetails.reason && <p className="mt-1 text-xs">{order.refundDetails.reason}</p>}
+        </div>
+      )}
+
+      <section className="mb-10 border-y border-supporting/40 py-6">
+        <div className="mb-5 flex items-center gap-3">
+          <Truck className="h-5 w-5 text-primary" />
+          <h2 className="font-serif text-xl text-primary">Shipment details</h2>
+        </div>
+        <div className="grid gap-5 text-sm sm:grid-cols-2 lg:grid-cols-4">
+          <div><p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-muted">Courier</p><p className="font-medium text-primary">{tracking.courier || 'Not assigned yet'}</p></div>
+          <div><p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-muted">Tracking number</p><p className="font-medium text-primary">{tracking.trackingId || 'Available after dispatch'}</p></div>
+          <div><p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-muted">Shipped</p><p className="font-medium text-primary">{formatDate(tracking.shippedAt) || 'Awaiting dispatch'}</p></div>
+          <div><p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-muted">Estimated delivery</p><p className="font-medium text-primary">{tracking.expectedDelivery ? new Date(tracking.expectedDelivery).toLocaleDateString('en-IN', { dateStyle: 'long' }) : 'To be confirmed'}</p></div>
+        </div>
+        {trackingUrl && (
+          <a href={trackingUrl} target="_blank" rel="noreferrer" className="mt-5 inline-flex items-center gap-2 border border-primary px-5 py-3 text-xs font-bold uppercase tracking-widest text-primary hover:bg-primary hover:text-white">
+            Track with courier <ExternalLink className="h-4 w-4" />
+          </a>
+        )}
+      </section>
+
+      <section className="mb-10">
+        <h2 className="mb-5 font-serif text-xl text-primary">Updates from our team</h2>
+        {updates.length === 0 ? (
+          <p className="border-l-2 border-supporting py-2 pl-4 text-sm text-secondary">Your order updates will appear here as our team processes the shipment.</p>
+        ) : (
+          <ol className="divide-y divide-supporting/30">
+            {updates.map((update: any, index: number) => (
+              <li key={`${update.type}-${update.updatedAt}-${index}`} className="py-4 first:pt-0">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-sm font-semibold text-primary">
+                    {update.type === 'STATUS'
+                      ? `Order status: ${(update.status || '').replace(/_/g, ' ')}`
+                      : update.type === 'REFUND' ? 'Refund issued' : 'Shipment details updated'}
+                  </p>
+                  <time className="text-xs text-muted">{formatDate(update.updatedAt)}</time>
+                </div>
+                {update.type === 'REFUND' && update.refundInfo && (
+                  <p className="mt-1 text-xs text-secondary">
+                    ₹{update.refundInfo.amount?.toLocaleString('en-IN')}{update.refundInfo.reason ? ` · ${update.refundInfo.reason}` : ''}
+                  </p>
+                )}
+                {update.type === 'TRACKING' && update.trackingInfo && (
+                  <p className="mt-1 text-xs text-secondary">
+                    {[update.trackingInfo.courier, update.trackingInfo.trackingId && `Tracking ${update.trackingInfo.trackingId}`, update.trackingInfo.expectedDelivery && `Expected ${new Date(update.trackingInfo.expectedDelivery).toLocaleDateString('en-IN')}`].filter(Boolean).join(' · ') || 'Shipment information saved'}
+                  </p>
+                )}
+              </li>
+            ))}
+          </ol>
+        )}
+      </section>
+
+      <section className="border-t border-supporting/40 pt-6">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted">Ship to</p>
+            <p className="mt-1 text-sm font-medium text-primary">{order.shippingAddress?.fullName}</p>
+            <p className="text-xs text-secondary">{order.shippingAddress?.city}, {order.shippingAddress?.state} {order.shippingAddress?.pincode}</p>
+          </div>
+          <Link to={`/account/orders/${order._id}`} className="text-xs font-bold uppercase tracking-widest text-primary underline underline-offset-4">Order details</Link>
+        </div>
+      </section>
     </div>
   );
 };

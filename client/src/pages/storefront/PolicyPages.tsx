@@ -1,6 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { ShieldCheck, Mail, ArrowLeft, FileText, Sparkles } from 'lucide-react';
+import { ShieldCheck, Mail, FileText } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface PolicySection {

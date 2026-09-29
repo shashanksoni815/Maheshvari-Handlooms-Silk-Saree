@@ -1,7 +1,6 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { User, Package, MapPin, Heart, LogOut, Star } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
-import { motion } from 'framer-motion';
 
 export const Account = () => {
   const { user, logout } = useAuthStore();

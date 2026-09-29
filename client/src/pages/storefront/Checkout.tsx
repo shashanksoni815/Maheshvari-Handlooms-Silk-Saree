@@ -44,8 +44,6 @@ const loadRazorpay = (): Promise<boolean> => {
 
 export const Checkout = () => {
   const items = useCartStore(state => state.items);
-  const couponCode = useCartStore(state => state.couponCode);
-  const couponDiscount = useCartStore(state => state.couponDiscount);
   const clearCart = useCartStore(state => state.clearCart);
   
   const user = useAuthStore(state => state.user);
@@ -56,10 +54,7 @@ export const Checkout = () => {
   const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
 
   const subtotal = items.reduce((total, item) => total + item.price * item.quantity, 0);
-  const discount = (subtotal * couponDiscount) / 100;
-  const tax = 0;
-  const shipping = 0;
-  const total = Math.max(0, subtotal - discount);
+  const total = subtotal;
 
   const { register, handleSubmit, formState: { errors } } = useForm<CheckoutFormValues>({
     resolver: zodResolver(addressSchema),
@@ -166,6 +161,7 @@ export const Checkout = () => {
       paymentObject.on('payment.failed', (response: any) => {
         const description = response?.error?.description;
         setPaymentMessage(description || 'Payment failed. Your order is saved; you can retry payment below.');
+        setIsProcessing(false);
       });
       paymentObject.open();
 
@@ -293,13 +289,6 @@ export const Checkout = () => {
                 <span>Subtotal</span>
                 <span>₹{subtotal.toLocaleString('en-IN')}</span>
               </div>
-              
-              {discount > 0 && (
-                <div className="flex justify-between text-burgundy font-medium">
-                  <span>Discount {couponCode && `(${couponCode})`}</span>
-                  <span>- ₹{discount.toLocaleString('en-IN')}</span>
-                </div>
-              )}
               
               <div className="flex justify-between text-emerald-700 font-medium">
                 <span>Tax (GST)</span>

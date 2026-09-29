@@ -17,7 +17,8 @@ export const Coupons = () => {
     code: '',
     discountType: 'PERCENTAGE',
     discountValue: 0,
-    minPurchaseAmount: 0,
+    minPurchase: 0,
+    startDate: new Date().toISOString().slice(0, 10),
     expiryDate: '',
     isActive: true
   });
@@ -47,7 +48,8 @@ export const Coupons = () => {
         code: coupon.code,
         discountType: coupon.discountType,
         discountValue: coupon.discountValue,
-        minPurchaseAmount: coupon.minPurchaseAmount || 0,
+        minPurchase: coupon.minPurchase || 0,
+        startDate: coupon.startDate ? new Date(coupon.startDate).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10),
         expiryDate: coupon.expiryDate ? new Date(coupon.expiryDate).toISOString().split('T')[0] : '',
         isActive: coupon.isActive ?? true
       });
@@ -56,7 +58,8 @@ export const Coupons = () => {
         code: '',
         discountType: 'PERCENTAGE',
         discountValue: 0,
-        minPurchaseAmount: 0,
+        minPurchase: 0,
+        startDate: new Date().toISOString().slice(0, 10),
         expiryDate: '',
         isActive: true
       });
@@ -116,7 +119,7 @@ export const Coupons = () => {
     },
     {
       header: 'Min Purchase',
-      accessor: (row: any) => `₹${row.minPurchaseAmount || 0}`
+      accessor: (row: any) => `₹${row.minPurchase || 0}`
     },
     {
       header: 'Expires',
@@ -200,7 +203,11 @@ export const Coupons = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Min. Purchase (₹)</label>
-                  <input type="number" min="0" value={formData.minPurchaseAmount || ''} onChange={(e) => setFormData({...formData, minPurchaseAmount: Number(e.target.value)})} className="w-full px-3 py-2 border border-supporting rounded-sm focus:ring-1 focus:ring-accent" />
+                  <input type="number" min="0" value={formData.minPurchase || ''} onChange={(e) => setFormData({...formData, minPurchase: Number(e.target.value)})} className="w-full px-3 py-2 border border-supporting rounded-sm focus:ring-1 focus:ring-accent" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Starts *</label>
+                  <input required type="date" value={formData.startDate} onChange={(e) => setFormData({...formData, startDate: e.target.value})} className="w-full px-3 py-2 border border-supporting rounded-sm focus:ring-1 focus:ring-accent" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Expiry Date *</label>

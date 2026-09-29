@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import { Filter, ChevronDown, Loader2, Search, ArrowLeft, ArrowRight, Sparkles } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Filter, ChevronDown, Loader2, Search, Sparkles } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useLocation, useParams } from 'react-router-dom';
 import api from '../../services/api';
@@ -14,10 +14,6 @@ export const Shop = () => {
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const [sortOption, setSortOption] = useState('newest');
   const [searchQuery, setSearchQuery] = useState('');
-  const [emailInput, setEmailInput] = useState('');
-  const [subscribed, setSubscribed] = useState(false);
-  
-  const recommendationsRef = useRef<HTMLDivElement>(null);
 
   const [filters, setFilters] = useState<FilterState>({
     category: [],

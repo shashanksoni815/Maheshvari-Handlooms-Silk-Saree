@@ -59,6 +59,7 @@ const Stores = React.lazy(() => import('./pages/storefront/Stores').then(m => ({
 const AccountProfile = React.lazy(() => import('./pages/storefront/AccountSubPages').then(m => ({ default: m.AccountProfile })));
 const AccountOrders = React.lazy(() => import('./pages/storefront/AccountSubPages').then(m => ({ default: m.AccountOrders })));
 const AccountOrderDetails = React.lazy(() => import('./pages/storefront/AccountSubPages').then(m => ({ default: m.AccountOrderDetails })));
+const AccountOrderTracking = React.lazy(() => import('./pages/storefront/AccountSubPages').then(m => ({ default: m.AccountOrderTracking })));
 const AccountAddresses = React.lazy(() => import('./pages/storefront/AccountSubPages').then(m => ({ default: m.AccountAddresses })));
 const AccountWishlist = React.lazy(() => import('./pages/storefront/AccountSubPages').then(m => ({ default: m.AccountWishlist })));
 const AccountReviews = React.lazy(() => import('./pages/storefront/AccountSubPages').then(m => ({ default: m.AccountReviews })));
@@ -88,6 +89,7 @@ const App = () => {
               <Route path="profile" element={<AccountProfile />} />
               <Route path="orders" element={<AccountOrders />} />
               <Route path="orders/:orderId" element={<AccountOrderDetails />} />
+              <Route path="orders/:orderId/track" element={<AccountOrderTracking />} />
               <Route path="addresses" element={<AccountAddresses />} />
               <Route path="wishlist" element={<AccountWishlist />} />
               <Route path="reviews" element={<AccountReviews />} />

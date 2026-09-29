@@ -21,9 +21,18 @@ import bannerRoutes from './routes/bannerRoutes';
 import adminRoutes from './routes/adminRoutes';
 
 dotenv.config();
+dotenv.config({ path: '.env.local', override: true });
 
-// Connect to Database
-connectDB();
+let databaseConnection: Promise<void> | undefined;
+const ensureDatabaseConnected = () => {
+  if (!databaseConnection) {
+    databaseConnection = connectDB().catch((error) => {
+      databaseConnection = undefined;
+      throw error;
+    });
+  }
+  return databaseConnection;
+};
 
 import cookieParser from 'cookie-parser';
 
@@ -51,8 +60,7 @@ app.use(
     origin: (origin, callback) => {
       // Allow requests with no origin (mobile apps, curl, Postman)
       if (!origin) return callback(null, true);
-      // Allow any vercel.app preview/production URL from the project
-      if (origin.includes('vercel.app') || allowedOrigins.includes(origin)) {
+      if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
       callback(new Error(`CORS policy: origin ${origin} not allowed`));
@@ -69,6 +77,15 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
+app.use(async (_req: Request, _res: Response, next: express.NextFunction) => {
+  try {
+    await ensureDatabaseConnected();
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
+
 // Routes
 app.get('/health', (req: Request, res: Response) => {
   res.status(200).json({ status: 'UP', message: 'API is running' });
@@ -83,7 +100,6 @@ app.use('/api/v1/collections', collectionRoutes); // Mount collectionRoutes
 app.use('/api/v1/uploads', uploadRoutes);
 app.use('/api/v1/orders', orderRoutes);
 app.use('/api/v1/payments', paymentRoutes);
-app.use('/api', paymentRoutes);
 app.use('/api/v1/addresses', addressRoutes);
 app.use('/api/v1/blogs', blogRoutes);
 app.use('/api/v1/coupons', couponRoutes);
@@ -96,9 +112,15 @@ app.use(errorHandler);
 const PORT = process.env.PORT || 5000;
 
 if (process.env.NODE_ENV !== 'production') {
-  app.listen(PORT, () => {
-    console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
-  });
+  ensureDatabaseConnected()
+    .then(() => {
+      app.listen(PORT, () => {
+        console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+      });
+    })
+    .catch(() => {
+      process.exitCode = 1;
+    });
 }
 
 export default app;

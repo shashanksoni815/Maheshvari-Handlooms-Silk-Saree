@@ -58,7 +58,7 @@ export const getAdminOrderById = async (req: Request, res: Response, next: NextF
   }
 };
 
-export const updateOrderStatus = async (req: Request, res: Response, next: NextFunction) => {
+export const updateOrderStatus = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const status = typeof req.body.status === 'string' ? req.body.status.toUpperCase() : '';
 
@@ -76,7 +76,18 @@ export const updateOrderStatus = async (req: Request, res: Response, next: NextF
       return next(new ApiError(409, 'Refund the paid order through the payment provider before cancelling it'));
     }
 
-    order.status = status as typeof order.status;
+    if (order.status !== status) {
+      order.status = status as typeof order.status;
+      if (status === 'SHIPPED' && !order.trackingInfo?.shippedAt) {
+        order.trackingInfo = { ...order.trackingInfo, shippedAt: new Date() };
+      }
+      order.adminUpdates.push({
+        type: 'STATUS',
+        status: order.status,
+        updatedBy: req.user._id,
+        updatedAt: new Date(),
+      });
+    }
     await order.save();
 
     res.status(200).json(new ApiResponse('Order status updated', order));
@@ -106,6 +117,17 @@ export const updateOrderTracking = async (req: AuthRequest, res: Response, next:
       ...(expectedDate ? { expectedDelivery: expectedDate } : {}),
       ...(order.status === 'SHIPPED' && !order.trackingInfo?.shippedAt ? { shippedAt: new Date() } : {}),
     };
+    order.adminUpdates.push({
+      type: 'TRACKING',
+      trackingInfo: {
+        courier: order.trackingInfo.courier || '',
+        trackingId: order.trackingInfo.trackingId || '',
+        trackingUrl: order.trackingInfo.trackingUrl || '',
+        ...(order.trackingInfo.expectedDelivery ? { expectedDelivery: order.trackingInfo.expectedDelivery } : {}),
+      },
+      updatedBy: req.user?._id,
+      updatedAt: new Date(),
+    });
     await order.save();
     res.status(200).json(new ApiResponse('Order tracking updated', order));
   } catch (error) {
@@ -159,6 +181,12 @@ export const issueRefund = async (req: AuthRequest, res: Response, next: NextFun
       refundedBy: req.user?._id,
       providerRefundId: providerRefund.id,
     };
+    order.adminUpdates.push({
+      type: 'REFUND',
+      refundInfo: { amount: refundAmount, reason: String(reason).trim() },
+      updatedBy: req.user?._id,
+      updatedAt: new Date(),
+    });
     
     await order.save();
 

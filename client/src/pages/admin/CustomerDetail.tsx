@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Loader2, User, ShoppingBag, MapPin, Mail, Phone, Calendar } from 'lucide-react';
+import { ArrowLeft, Loader2, ShoppingBag, Mail, Phone, Calendar } from 'lucide-react';
 import api from '../../services/api';
 
 export const CustomerDetail = () => {

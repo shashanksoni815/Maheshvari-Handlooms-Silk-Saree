@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useCartStore } from '../../store/cartStore';
-import { Minus, Plus, X, ShieldCheck, Tag, ArrowRight, ShoppingBag, Truck, Lock } from 'lucide-react';
+import { Minus, Plus, X, ShieldCheck, ArrowRight, ShoppingBag, Lock } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
@@ -8,19 +8,12 @@ export const Cart = () => {
   const items = useCartStore(state => state.items);
   const removeItem = useCartStore(state => state.removeItem);
   const updateQuantity = useCartStore(state => state.updateQuantity);
-  const couponCode = useCartStore(state => state.couponCode);
-  const couponDiscount = useCartStore(state => state.couponDiscount);
-  const removeCoupon = useCartStore(state => state.removeCoupon);
-  
   const navigate = useNavigate();
   const [couponInput, setCouponInput] = useState('');
   const [couponError, setCouponError] = useState('');
 
   const subtotal = items.reduce((total, item) => total + item.price * item.quantity, 0);
-  const discount = (subtotal * couponDiscount) / 100;
-  const tax = 0;
-  const shipping = 0;
-  const total = Math.max(0, subtotal - discount);
+  const total = subtotal;
 
   const handleApplyCoupon = (e: React.FormEvent) => {
     e.preventDefault();
@@ -136,12 +129,6 @@ export const Cart = () => {
                   <span>Subtotal</span>
                   <span className="font-serif font-bold text-primary text-sm">₹{subtotal.toLocaleString('en-IN')}</span>
                 </div>
-                {couponDiscount > 0 && (
-                  <div className="flex justify-between text-emerald-700">
-                    <span>Discount ({couponDiscount}%)</span>
-                    <span>-₹{discount.toLocaleString('en-IN')}</span>
-                  </div>
-                )}
                 <div className="flex justify-between text-emerald-700 font-medium">
                   <span>Estimated Tax</span>
                   <span>₹0 (0%)</span>

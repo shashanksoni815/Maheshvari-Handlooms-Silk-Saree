@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Loader2, ArrowLeft, Sparkles, Tag } from 'lucide-react';
+import { Loader2, ArrowLeft, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 import api from '../../services/api';
 import { ProductCard } from '../../components/product/ProductCard';

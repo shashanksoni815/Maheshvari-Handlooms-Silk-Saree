@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import User from '../models/User';
-import generateToken from '../utils/generateToken';
+import generateToken, { getRefreshTokenSecret } from '../utils/generateToken';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
@@ -144,7 +144,7 @@ export const refresh = async (req: Request, res: Response, next: NextFunction) =
       return next(new ApiError(401, 'Refresh token not found'));
     }
 
-    const decoded: any = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET || 'refreshSecret');
+    const decoded: any = jwt.verify(refreshToken, getRefreshTokenSecret());
     const user = await User.findById(decoded.id).populate('customRole');
 
     if (!user || user.refreshToken !== refreshToken) {

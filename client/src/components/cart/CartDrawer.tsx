@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Minus, Plus, ShoppingBag, ArrowRight, Zap } from 'lucide-react';
+import { X, Minus, Plus, ShoppingBag, ArrowRight } from 'lucide-react';
 import { useCartStore } from '../../store/cartStore';
 import { Link, useNavigate } from 'react-router-dom';
 

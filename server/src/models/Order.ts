@@ -41,6 +41,14 @@ export interface IOrder extends Document {
     shippedAt?: Date;
     expectedDelivery?: Date;
   };
+  adminUpdates: {
+    type: 'STATUS' | 'TRACKING' | 'REFUND';
+    status?: IOrder['status'];
+    trackingInfo?: IOrder['trackingInfo'];
+    refundInfo?: { amount: number; reason: string };
+    updatedBy: mongoose.Types.ObjectId;
+    updatedAt: Date;
+  }[];
   isRefunded?: boolean;
   refundDetails?: {
     amount: number;
@@ -109,6 +117,25 @@ const OrderSchema: Schema = new Schema(
       trackingUrl: String,
       shippedAt: Date,
       expectedDelivery: Date,
+    },
+    adminUpdates: {
+      type: { type: String, enum: ['STATUS', 'TRACKING', 'REFUND'], required: true },
+      status: {
+        type: String,
+        enum: ['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'OUT_FOR_DELIVERY', 'DELIVERED', 'CANCELLED'],
+      },
+      trackingInfo: {
+        courier: String,
+        trackingId: String,
+        trackingUrl: String,
+        expectedDelivery: Date,
+      },
+      refundInfo: {
+        amount: Number,
+        reason: String,
+      },
+      updatedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+      updatedAt: { type: Date, default: Date.now, required: true },
     },
     isRefunded: { type: Boolean, default: false },
     refundDetails: {

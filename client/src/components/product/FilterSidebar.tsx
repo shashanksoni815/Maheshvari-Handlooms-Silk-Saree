@@ -53,6 +53,12 @@ const FilterSection = ({ title, options, selected, onChange }: { title: string, 
                 const isSelected = selected.includes(opt);
                 return (
                   <label key={opt} className="flex items-center justify-between cursor-pointer group py-1 px-1.5 rounded-lg hover:bg-neutral-100/70 transition-colors">
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => onChange(opt)}
+                      className="sr-only"
+                    />
                     <div className="flex items-center gap-2.5">
                       <div className={`w-4 h-4 rounded-md border transition-all flex items-center justify-center ${
                         isSelected 

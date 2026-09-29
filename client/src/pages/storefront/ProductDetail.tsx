@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Minus, Plus, Heart, Truck, ShieldCheck, ChevronDown, ChevronUp, Loader2, Zap, ShoppingBag, Star, Share2 } from 'lucide-react';
+import { Minus, Plus, Heart, Truck, ShieldCheck, ChevronDown, ChevronUp, Loader2, Zap, ShoppingBag, Star } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import api from '../../services/api';
 import { useCartStore } from '../../store/cartStore';
@@ -47,7 +47,6 @@ export const ProductDetail = () => {
   const [activeImage, setActiveImage] = useState(0);
   
   const addItem = useCartStore(state => state.addItem);
-  const toggleDrawer = useCartStore(state => state.toggleDrawer);
   const addWishlist = useWishlistStore(state => state.addItem);
   const removeWishlist = useWishlistStore(state => state.removeItem);
   const wishlistItems = useWishlistStore(state => state.items);
@@ -115,7 +114,6 @@ export const ProductDetail = () => {
       quantity,
       stock: product.stock
     });
-    toggleDrawer();
   };
 
   const handleBuyNow = () => {

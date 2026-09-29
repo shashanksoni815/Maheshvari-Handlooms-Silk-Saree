@@ -1,50 +1,20 @@
 import React from 'react';
-import { ArrowRight, Clock, BookOpen, Sparkles, Share2 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { ArrowRight, Clock, BookOpen, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import api from '../../services/api';
 
-const articles = [
-  {
-    slug: 'how-to-identify-pure-silk',
-    title: 'How to Identify Pure Silk: The Connoisseur\'s Guide',
-    excerpt: 'Real silk has a subtle warmth and lustre that synthetics cannot replicate. We share the burn test, feel test, and visual cues every silk lover should know.',
-    image: 'https://images.unsplash.com/photo-1596455607563-ad6193f76b17?q=80&w=800&auto=format&fit=crop',
-    category: 'Silk Education',
-    readTime: '5 min read',
-    date: 'September 18, 2026',
-    author: 'Aarti Desai',
-  },
-  {
-    slug: 'the-story-of-banarasi-weaving',
-    title: 'The Story of Banarasi Weaving: 500 Years of Heritage',
-    excerpt: 'From the Mughal courts of Varanasi to the wardrobes of modern brides, we trace the extraordinary journey of India\'s most celebrated silk weave.',
-    image: 'https://images.unsplash.com/photo-1583391733958-6c5188f54124?q=80&w=800&auto=format&fit=crop',
-    category: 'Heritage',
-    readTime: '8 min read',
-    date: 'September 10, 2026',
-    author: 'Vikramaditya Roy',
-  },
-  {
-    slug: 'styling-a-silk-saree-for-modern-occasions',
-    title: 'Styling a Silk Saree for Modern Occasions',
-    excerpt: 'A silk saree is never just for weddings. From boardrooms to date nights, our style guide shows you how to carry this timeless garment into every moment.',
-    image: 'https://images.unsplash.com/photo-1617261971759-40899ab4c759?q=80&w=800&auto=format&fit=crop',
-    category: 'Style Guide',
-    readTime: '6 min read',
-    date: 'September 4, 2026',
-    author: 'Meera Kapur',
-  },
-  {
-    slug: 'caring-for-your-silk-saree',
-    title: 'The Complete Guide to Caring for Your Silk Saree',
-    excerpt: 'A precious silk saree, with proper care, will outlast generations. Learn the do\'s and don\'ts of storage, cleaning, and maintenance from master weavers.',
-    image: 'https://images.unsplash.com/photo-1605763240000-7e93b172d754?q=80&w=800&auto=format&fit=crop',
-    category: 'Care Guide',
-    readTime: '7 min read',
-    date: 'August 28, 2026',
-    author: 'Master Weaver Devendra',
-  },
-];
+interface JournalPost {
+  slug: string;
+  title: string;
+  excerpt: string;
+  image: string;
+  category: string;
+  readTime: string;
+  author: string;
+  createdAt: string;
+}
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -56,7 +26,30 @@ const fadeUp = {
 };
 
 export const Journal = () => {
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['published-blogs'],
+    queryFn: async () => (await api.get('/blogs')).data,
+  });
+  const articles: JournalPost[] = data?.data || [];
   const [featured, ...rest] = articles;
+  const formatDate = (date: string) => new Date(date).toLocaleDateString('en-IN', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+
+  if (isLoading || isError || !featured) {
+    return (
+      <main className="min-h-[60vh] bg-background flex items-center justify-center px-4 text-center">
+        <div>
+          <h1 className="text-3xl font-serif text-primary mb-3">The Maheshwari Journal</h1>
+          <p className="text-secondary" role={isError ? 'alert' : undefined}>
+            {isLoading ? 'Loading published stories...' : isError ? 'Journal entries are temporarily unavailable.' : 'New journal entries are coming soon.'}
+          </p>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <div className="bg-background min-h-screen">
@@ -123,7 +116,7 @@ export const Journal = () => {
 
             <div className="lg:col-span-5 flex flex-col justify-center">
               <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-wider text-secondary/70 mb-4">
-                <span>{featured.date}</span>
+                <span>{formatDate(featured.createdAt)}</span>
                 <span>•</span>
                 <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-accent" /> {featured.readTime}</span>
               </div>
@@ -180,7 +173,7 @@ export const Journal = () => {
 
                 <div className="p-6 flex flex-col flex-1">
                   <div className="flex items-center gap-3 text-[11px] font-semibold text-secondary/70 mb-3">
-                    <span>{article.date}</span>
+                    <span>{formatDate(article.createdAt)}</span>
                     <span>•</span>
                     <span className="flex items-center gap-1"><Clock className="w-3 h-3 text-accent" /> {article.readTime}</span>
                   </div>

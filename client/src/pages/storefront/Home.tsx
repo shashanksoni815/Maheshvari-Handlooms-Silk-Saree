@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Shield, Truck, RotateCcw, Star, Loader2, ChevronLeft, ChevronRight, Sparkles, ArrowRight, Award, HeartHandshake, Quote } from 'lucide-react';
+import { Shield, Truck, Star, Loader2, ChevronLeft, ChevronRight, Sparkles, ArrowRight, Award, Quote } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import api from '../../services/api';
 import { ProductCard } from '../../components/product/ProductCard';

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Plus } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import { AdminDataTable } from '../../components/admin/AdminDataTable';
 import { useConfirmation } from '../../components/admin/ConfirmationModal';

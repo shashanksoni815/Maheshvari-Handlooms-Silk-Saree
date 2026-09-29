@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, Phone, MapPin, Send, ShieldCheck, Award, Heart, CheckCircle2 } from 'lucide-react';
+import { Send, ShieldCheck, Award, Heart, CheckCircle2 } from 'lucide-react';
 
 const InstagramIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
   <svg className={className} fill="currentColor" viewBox="0 0 24 24">

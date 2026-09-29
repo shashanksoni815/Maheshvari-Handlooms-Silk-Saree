@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import User from '../models/User';
 import { ApiError } from '../utils/apiError';
+import { getAccessTokenSecret } from '../utils/generateToken';
 
 export interface AuthRequest extends Request {
   user?: any;
@@ -21,7 +22,7 @@ export const protect = async (req: AuthRequest, res: Response, next: NextFunctio
       return next(new ApiError(401, 'Not authorized to access this route'));
     }
 
-    const decoded: any = jwt.verify(token, process.env.JWT_ACCESS_SECRET || 'secret');
+    const decoded: any = jwt.verify(token, getAccessTokenSecret());
 
     const user = await User.findById(decoded.id).populate('customRole');
 

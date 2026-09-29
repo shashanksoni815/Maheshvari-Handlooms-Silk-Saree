@@ -205,7 +205,7 @@ export const getOrders = async (req: Request, res: Response, next: NextFunction)
 // @desc    Update order to delivered
 // @route   PUT /api/v1/orders/:id/deliver
 // @access  Private/Admin
-export const updateOrderToDelivered = async (req: Request, res: Response, next: NextFunction) => {
+export const updateOrderToDelivered = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const order = await Order.findById(req.params.id);
 
@@ -215,6 +215,12 @@ export const updateOrderToDelivered = async (req: Request, res: Response, next: 
 
     order.status = 'DELIVERED';
     order.trackingInfo = order.trackingInfo || {};
+    order.adminUpdates.push({
+      type: 'STATUS',
+      status: 'DELIVERED',
+      updatedBy: req.user?._id,
+      updatedAt: new Date(),
+    });
     
     const updatedOrder = await order.save();
 
@@ -235,28 +241,32 @@ export const cancelOrder = async (req: AuthRequest, res: Response, next: NextFun
       return next(new ApiError(404, 'Order not found'));
     }
 
-    const order = await Order.findById(orderId);
+    const updatedOrder = await Order.findOneAndUpdate(
+      {
+        _id: orderId,
+        user: req.user._id,
+        status: { $in: ['PENDING', 'CONFIRMED', 'PROCESSING'] },
+        'paymentInfo.status': { $ne: 'COMPLETED' },
+      },
+      { $set: { status: 'CANCELLED' } },
+      { new: true }
+    );
 
-    if (!order) {
-      return next(new ApiError(404, 'Order not found'));
+    if (!updatedOrder) {
+      const order = await Order.findById(orderId);
+      if (!order) {
+        return next(new ApiError(404, 'Order not found'));
+      }
+      if (order.user.toString() !== req.user._id.toString()) {
+        return next(new ApiError(403, 'Not authorized to cancel this order'));
+      }
+      if (order.paymentInfo.status === 'COMPLETED') {
+        return next(new ApiError(409, 'This paid order requires a provider-confirmed refund. Please contact support.'));
+      }
+      return next(new ApiError(409, 'Order status changed; refresh the order before cancelling'));
     }
 
-    if (order.user.toString() !== req.user._id.toString()) {
-      return next(new ApiError(403, 'Not authorized to cancel this order'));
-    }
-
-    if (!['PENDING', 'CONFIRMED', 'PROCESSING'].includes(order.status)) {
-      return next(new ApiError(400, 'Order cannot be cancelled at this stage. Please contact support.'));
-    }
-
-    if (order.paymentInfo.status === 'COMPLETED') {
-      return next(new ApiError(409, 'This paid order requires a provider-confirmed refund. Please contact support.'));
-    }
-
-    order.status = 'CANCELLED';
-
-    const updatedOrder = await order.save();
-    await Promise.all(order.items.map(item =>
+    await Promise.all(updatedOrder.items.map(item =>
       Product.updateOne({ _id: item.product }, { $inc: { stock: item.quantity } })
     ));
 
