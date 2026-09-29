@@ -98,7 +98,17 @@ export const createRazorpayOrder = async (req: AuthRequest, res: Response, next:
       throw new ApiError(500, 'Razorpay SDK instance is unavailable');
     }
 
-    const razorpayOrder = await razorpay.orders.create(options);
+    let razorpayOrder: any;
+    try {
+      razorpayOrder = await razorpay.orders.create(options);
+    } catch (error: any) {
+      console.error('Razorpay provider order creation failed:', error);
+      const providerStatus = Number(error.statusCode || error.status);
+      const message = providerStatus === 401 || providerStatus === 403
+        ? 'Razorpay authentication failed. Verify the server-side key ID and secret match in Vercel, then redeploy.'
+        : error.error?.description || error.description || 'Razorpay could not create the payment order.';
+      return next(new ApiError(502, message));
+    }
 
     if (!razorpayOrder || (!razorpayOrder.id && !(razorpayOrder as any).order_id)) {
       throw new ApiError(500, 'Razorpay provider failed to return valid order details');
