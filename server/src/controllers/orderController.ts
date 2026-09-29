@@ -84,15 +84,14 @@ export const createOrder = async (req: AuthRequest, res: Response, next: NextFun
     }
 
     const subtotal = orderItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    const tax = Math.round(subtotal * 0.05 * 100) / 100;
-    // Match the current storefront calculation pending a decision on the policy discrepancy.
-    const shipping = subtotal > 10000 ? 0 : 250;
+    const tax = 0;
+    const shipping = 0;
     const pricing = {
       subtotal,
       discount: 0,
-      tax,
-      shipping,
-      total: Math.round((subtotal + tax + shipping) * 100) / 100,
+      tax: 0,
+      shipping: 0,
+      total: Math.round(subtotal * 100) / 100,
     };
 
     // Reserve stock atomically. Any failure restores reservations made earlier

@@ -11,18 +11,23 @@ import sendEmail from '../utils/emailService';
 const DEFAULT_KEY_ID = 'rzp_test_ThZMHIZ2WkkrB0';
 const DEFAULT_KEY_SECRET = 'mJvF55wMj8tITXr7xNYeu6Ds';
 
+const cleanEnvVal = (val?: string) => {
+  if (!val) return '';
+  return val.trim().replace(/^['"]|['"]$/g, '');
+};
+
 const getKeyId = () => {
-  const envKey = process.env.RAZORPAY_KEY_ID;
-  if (envKey && envKey !== 'rzp_test_your_key_id' && envKey.trim().length > 0) {
-    return envKey.trim();
+  const envKey = cleanEnvVal(process.env.RAZORPAY_KEY_ID);
+  if (envKey && envKey !== 'rzp_test_your_key_id' && envKey.length > 0) {
+    return envKey;
   }
   return DEFAULT_KEY_ID;
 };
 
 const getKeySecret = () => {
-  const envSecret = process.env.RAZORPAY_KEY_SECRET;
-  if (envSecret && envSecret !== 'your_razorpay_key_secret' && envSecret.trim().length > 0) {
-    return envSecret.trim();
+  const envSecret = cleanEnvVal(process.env.RAZORPAY_KEY_SECRET);
+  if (envSecret && envSecret !== 'your_razorpay_key_secret' && envSecret.length > 0) {
+    return envSecret;
   }
   return DEFAULT_KEY_SECRET;
 };
@@ -35,10 +40,16 @@ const getRazorpayClient = () => {
   const keyId = getKeyId();
   const keySecret = getKeySecret();
 
-  const RazorpayConstructor = typeof Razorpay === 'function' ? Razorpay : (Razorpay as any).default || Razorpay;
+  let RazorpayConstructor = Razorpay;
+  if (typeof RazorpayConstructor !== 'function') {
+    RazorpayConstructor = (Razorpay as any).default || (Razorpay as any).Razorpay || Razorpay;
+  }
+  if (typeof RazorpayConstructor !== 'function' && typeof (RazorpayConstructor as any).default === 'function') {
+    RazorpayConstructor = (RazorpayConstructor as any).default;
+  }
 
   try {
-    return new RazorpayConstructor({
+    return new (RazorpayConstructor as any)({
       key_id: keyId,
       key_secret: keySecret,
     });
@@ -80,8 +91,9 @@ export const createRazorpayOrder = async (req: Request, res: Response, next: Nex
         return next(new ApiError(409, 'This order is not awaiting payment'));
       }
 
-      amountInPaise = Math.round(order.pricing.total * 100);
-      receipt = `receipt_order_${order._id}`;
+      const totalVal = order.pricing?.total ?? order.pricing?.subtotal;
+      amountInPaise = Math.round(Number(totalVal) * 100);
+      receipt = `rcpt_${order._id}`;
 
       if (order.paymentInfo.razorpayOrderId) {
         return res.status(200).json(new ApiResponse('Razorpay order already created', {
@@ -106,30 +118,42 @@ export const createRazorpayOrder = async (req: Request, res: Response, next: Nex
 
     const options = {
       amount: amountInPaise,
-      currency: currency,
-      receipt: receipt,
+      currency: currency || 'INR',
+      receipt: String(receipt).slice(0, 40),
     };
 
     const razorpay = getRazorpayClient();
+    if (!razorpay || !razorpay.orders || typeof razorpay.orders.create !== 'function') {
+      throw new ApiError(500, 'Razorpay SDK instance is unavailable');
+    }
+
     const razorpayOrder = await razorpay.orders.create(options);
 
+    if (!razorpayOrder || (!razorpayOrder.id && !(razorpayOrder as any).order_id)) {
+      throw new ApiError(500, 'Razorpay provider failed to return valid order details');
+    }
+
+    const rzpId = razorpayOrder.id || (razorpayOrder as any).order_id;
+    const rzpAmount = razorpayOrder.amount || amountInPaise;
+    const rzpCurrency = razorpayOrder.currency || 'INR';
+
     if (order) {
-      order.paymentInfo.razorpayOrderId = razorpayOrder.id;
+      order.paymentInfo.razorpayOrderId = rzpId;
       await order.save();
     }
 
     res.status(200).json(new ApiResponse('Razorpay order created successfully', {
-      order_id: razorpayOrder.id,
-      id: razorpayOrder.id,
-      amount: razorpayOrder.amount,
-      currency: razorpayOrder.currency,
-      receipt: razorpayOrder.receipt,
+      order_id: rzpId,
+      id: rzpId,
+      amount: rzpAmount,
+      currency: rzpCurrency,
+      receipt: razorpayOrder.receipt || receipt,
       data: razorpayOrder,
     }));
   } catch (error: any) {
     console.error('Razorpay Order Creation Error:', error);
-    const statusCode = error.statusCode || error.status || 500;
-    const message = error.message || error.error?.description || 'Error creating Razorpay order';
+    const statusCode = error.statusCode || error.status || (typeof error.statusCode === 'number' ? error.statusCode : 500);
+    const message = error.error?.description || error.description || error.message || 'Error creating Razorpay order';
     next(new ApiError(statusCode, message));
   }
 };

@@ -139,7 +139,7 @@ export const CartDrawer = () => {
               <span className="text-2xl font-bold text-neutral-900">₹{subtotal.toLocaleString('en-IN')}</span>
             </div>
             
-            <p className="text-[11px] text-neutral-400 text-center">Taxes & shipping calculated securely at checkout</p>
+            <p className="text-[11px] text-emerald-700 font-medium text-center">Complimentary shipping & zero tax on all orders</p>
             
             <div className="grid grid-cols-2 gap-3">
               <Link

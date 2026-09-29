@@ -57,9 +57,9 @@ export const Checkout = () => {
 
   const subtotal = items.reduce((total, item) => total + item.price * item.quantity, 0);
   const discount = (subtotal * couponDiscount) / 100;
-  const tax = (subtotal - discount) * 0.05;
-  const shipping = (subtotal - discount) > 10000 || (subtotal - discount) === 0 ? 0 : 250;
-  const total = subtotal - discount + tax + shipping;
+  const tax = 0;
+  const shipping = 0;
+  const total = Math.max(0, subtotal - discount);
 
   const { register, handleSubmit, formState: { errors } } = useForm<CheckoutFormValues>({
     resolver: zodResolver(addressSchema),
@@ -105,12 +105,18 @@ export const Checkout = () => {
       let orderId = pendingOrderId;
       if (!orderId) {
         const orderRes = await api.post('/orders', orderData);
-        orderId = orderRes.data.data._id;
+        orderId = orderRes.data?.data?._id || orderRes.data?._id;
         setPendingOrderId(orderId);
       }
 
       const rzpOrderRes = await api.post(`/payments/create-order/${orderId}`);
-      const { amount, id: razorpayOrderId, currency } = rzpOrderRes.data.data;
+      const payload = rzpOrderRes.data?.data || rzpOrderRes.data;
+      if (!payload || !payload.amount || (!payload.id && !payload.order_id)) {
+        throw new Error(rzpOrderRes.data?.message || 'Could not retrieve payment order details');
+      }
+      const amount = payload.amount;
+      const razorpayOrderId = payload.id || payload.order_id;
+      const currency = payload.currency || 'INR';
       let paymentVerificationStarted = false;
 
       const options = {
@@ -295,13 +301,13 @@ export const Checkout = () => {
                 </div>
               )}
               
-              <div className="flex justify-between">
+              <div className="flex justify-between text-emerald-700 font-medium">
                 <span>Tax (GST)</span>
-                <span>₹{tax.toLocaleString('en-IN')}</span>
+                <span>₹0 (0%)</span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between text-emerald-700 font-medium">
                 <span>Shipping</span>
-                <span>{shipping === 0 ? 'Free' : `₹${shipping.toLocaleString('en-IN')}`}</span>
+                <span>FREE</span>
               </div>
               
               <div className="flex justify-between items-center text-xl font-serif text-primary border-t border-supporting pt-6 mt-2">

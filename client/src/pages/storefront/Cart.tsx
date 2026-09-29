@@ -18,9 +18,9 @@ export const Cart = () => {
 
   const subtotal = items.reduce((total, item) => total + item.price * item.quantity, 0);
   const discount = (subtotal * couponDiscount) / 100;
-  const tax = (subtotal - discount) * 0.05;
-  const shipping = (subtotal - discount) > 10000 || (subtotal - discount) === 0 ? 0 : 250;
-  const total = subtotal - discount + tax + shipping;
+  const tax = 0;
+  const shipping = 0;
+  const total = Math.max(0, subtotal - discount);
 
   const handleApplyCoupon = (e: React.FormEvent) => {
     e.preventDefault();
@@ -142,13 +142,13 @@ export const Cart = () => {
                     <span>-₹{discount.toLocaleString('en-IN')}</span>
                   </div>
                 )}
-                <div className="flex justify-between">
-                  <span>Estimated Tax (5% GST)</span>
-                  <span>₹{tax.toLocaleString('en-IN')}</span>
+                <div className="flex justify-between text-emerald-700 font-medium">
+                  <span>Estimated Tax</span>
+                  <span>₹0 (0%)</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between text-emerald-700 font-medium">
                   <span>Insured Shipping</span>
-                  <span>{shipping === 0 ? <strong className="text-emerald-700 font-bold uppercase">FREE</strong> : `₹${shipping}`}</span>
+                  <span>FREE</span>
                 </div>
 
                 <div className="pt-4 border-t border-supporting/50 flex justify-between items-center text-primary font-bold">
