@@ -42,34 +42,32 @@ export function AdminDataTable<T extends { _id: string }>({
   return (
     <div className="bg-white rounded-md shadow-sm border border-supporting/50">
       {/* Toolbar */}
-      <div className="p-4 border-b border-supporting/50 flex justify-between items-center bg-gray-50/50">
-        <div className="relative w-72">
-          {onSearch && (
-            <>
-              <input
-                type="text"
-                placeholder={searchPlaceholder}
-                onChange={(e) => onSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-supporting rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-accent"
-              />
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted" />
-            </>
-          )}
+      {onSearch && (
+        <div className="p-4 border-b border-supporting/50 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 bg-gray-50/50">
+          <div className="relative w-full max-w-sm">
+            <input
+              type="text"
+              placeholder={searchPlaceholder}
+              onChange={(e) => onSearch(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-supporting rounded-sm text-sm focus:outline-none focus:ring-1 focus:ring-accent"
+            />
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted" />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Table */}
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto scrollbar-thin">
         <table className="w-full text-left text-sm">
           <thead className="bg-primary/5 text-primary">
             <tr>
               {columns.map((col, idx) => (
-                <th key={idx} className={`px-6 py-4 font-semibold tracking-wide uppercase text-xs ${col.className || ''}`}>
+                <th key={idx} className={`px-4 sm:px-6 py-4 font-semibold tracking-wide uppercase text-xs ${col.className || ''}`}>
                   {col.header}
                 </th>
               ))}
               {(onEdit || onDelete || onView) && (
-                <th className="px-6 py-4 font-semibold tracking-wide uppercase text-xs text-right">Actions</th>
+                <th className="px-4 sm:px-6 py-4 font-semibold tracking-wide uppercase text-xs text-right">Actions</th>
               )}
             </tr>
           </thead>
@@ -90,24 +88,24 @@ export function AdminDataTable<T extends { _id: string }>({
               data.map((row) => (
                 <tr key={row._id} className="hover:bg-gray-50/50 transition-colors">
                   {columns.map((col, idx) => (
-                    <td key={idx} className={`px-6 py-4 whitespace-nowrap ${col.className || ''}`}>
+                    <td key={idx} className={`px-4 sm:px-6 py-4 whitespace-nowrap ${col.className || ''}`}>
                       {typeof col.accessor === 'function' ? col.accessor(row) : (row[col.accessor] as React.ReactNode)}
                     </td>
                   ))}
                   {(onEdit || onDelete || onView) && (
-                    <td className="px-6 py-4 text-right space-x-2">
+                    <td className="px-4 sm:px-6 py-4 text-right space-x-2">
                       {onView && (
-                        <button onClick={() => onView(row)} className="text-primary hover:text-accent p-1 transition-colors">
+                        <button onClick={() => onView(row)} className="text-primary hover:text-accent p-1 transition-colors" title="View Details">
                           <Eye className="w-4 h-4" />
                         </button>
                       )}
                       {onEdit && (
-                        <button onClick={() => onEdit(row)} className="text-primary hover:text-accent p-1 transition-colors">
+                        <button onClick={() => onEdit(row)} className="text-primary hover:text-accent p-1 transition-colors" title="Edit">
                           <Edit className="w-4 h-4" />
                         </button>
                       )}
                       {onDelete && (
-                        <button onClick={() => onDelete(row)} className="text-red-500 hover:text-red-700 p-1 transition-colors">
+                        <button onClick={() => onDelete(row)} className="text-red-500 hover:text-red-700 p-1 transition-colors" title="Delete">
                           <Trash2 className="w-4 h-4" />
                         </button>
                       )}
@@ -122,17 +120,17 @@ export function AdminDataTable<T extends { _id: string }>({
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="p-4 border-t border-supporting/50 flex items-center justify-between text-sm text-muted">
+        <div className="p-4 border-t border-supporting/50 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-muted text-center sm:text-left">
           <div>
             Showing <span className="font-medium text-primary">{(currentPage - 1) * pageSize + 1}</span> to{' '}
             <span className="font-medium text-primary">{Math.min(currentPage * pageSize, totalCount)}</span> of{' '}
             <span className="font-medium text-primary">{totalCount}</span> results
           </div>
-          <div className="flex space-x-1">
+          <div className="flex items-center space-x-1">
             <button
               onClick={() => onPageChange(currentPage - 1)}
               disabled={currentPage === 1}
-              className="p-1 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="p-1.5 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
@@ -140,7 +138,7 @@ export function AdminDataTable<T extends { _id: string }>({
             <button
               onClick={() => onPageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className="p-1 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="p-1.5 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <ChevronRight className="w-5 h-5" />
             </button>

@@ -5,6 +5,7 @@ import { MobileBottomNavigation } from '../components/layout/navigation/MobileBo
 import { Footer } from '../components/layout/Footer';
 import { AnnouncementBar } from '../components/layout/AnnouncementBar';
 import { CartDrawer } from "../components/cart/CartDrawer";
+import { ScrollToTopButton } from '../components/common/ScrollToTopButton';
 
 const SearchOverlay = lazy(() => import('../components/layout/navigation/SearchOverlay').then(module => ({ default: module.SearchOverlay })));
 
@@ -20,6 +21,7 @@ export const StorefrontLayout = () => {
         <Outlet />
       </main>
       <Footer />
+      <ScrollToTopButton />
       
       {/* Search overlay needed here if opened from bottom nav */}
       {isSearchOpen && (

@@ -3,14 +3,24 @@ import { motion, type Variants } from 'framer-motion';
 
 const STORES = [
   {
+    city: 'Indore',
+    name: 'Maheshwari Flagship (SHUBHAM BICHHWE)',
+    address: '264 SHUBHAM DIAMOND CITY, SHOP NO.1, SONWAY, INDORE, MP 453331',
+    phone: '+91 91793 38474',
+    email: 'care@maheshwarisilk.com',
+    hours: 'Mon – Sun: 10:00 AM – 8:00 PM',
+    image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    tag: 'Flagship Store & HQ',
+  },
+  {
     city: 'Mumbai',
-    name: 'Maheshwari Flagship',
+    name: 'Maheshwari Silk Studio',
     address: '123 Heritage Row, Colaba, Mumbai 400005',
     phone: '+91 22 2345 6789',
     email: 'mumbai@maheshwarisilk.com',
     hours: 'Mon – Sun: 11:00 AM – 8:00 PM',
-    image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    tag: 'Flagship',
+    image: 'https://images.unsplash.com/photo-1567401893414-76b7b1e5a7a5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+    tag: 'Studio',
   },
   {
     city: 'Delhi',
@@ -19,18 +29,8 @@ const STORES = [
     phone: '+91 11 9876 5432',
     email: 'delhi@maheshwarisilk.com',
     hours: 'Mon – Sun: 10:30 AM – 7:30 PM',
-    image: 'https://images.unsplash.com/photo-1567401893414-76b7b1e5a7a5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    tag: 'Boutique',
-  },
-  {
-    city: 'Bengaluru',
-    name: 'Maheshwari Atelier',
-    address: '78 Silk Street, Indiranagar, Bengaluru 560038',
-    phone: '+91 80 1234 5678',
-    email: 'blr@maheshwarisilk.com',
-    hours: 'Tue – Sun: 11:00 AM – 8:00 PM',
     image: 'https://images.unsplash.com/photo-1582046105437-dbd7f9dc6859?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-    tag: 'Atelier',
+    tag: 'Boutique',
   },
 ];
 

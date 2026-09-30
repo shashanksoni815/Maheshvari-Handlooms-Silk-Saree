@@ -12,7 +12,9 @@ export const Banners = () => {
   const [currentBanner, setCurrentBanner] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isMobileUploading, setIsMobileUploading] = useState(false);
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const mobileImageInputRef = useRef<HTMLInputElement>(null);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -102,6 +104,26 @@ export const Banners = () => {
       alert(error.response?.data?.message || 'Failed to upload banner image');
     } finally {
       setIsUploading(false);
+      event.target.value = '';
+    }
+  };
+
+  const handleMobileImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const uploadData = new FormData();
+    uploadData.append('image', file);
+    setIsMobileUploading(true);
+    try {
+      const response = await api.post('/uploads', uploadData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      setFormData(previous => ({ ...previous, mobileImage: response.data.data.url }));
+    } catch (error: any) {
+      alert(error.response?.data?.message || 'Failed to upload mobile banner image');
+    } finally {
+      setIsMobileUploading(false);
       event.target.value = '';
     }
   };
@@ -230,7 +252,13 @@ export const Banners = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Mobile Image URL (Optional)</label>
-                <input type="url" value={formData.mobileImage} onChange={(e) => setFormData({...formData, mobileImage: e.target.value})} className="w-full px-3 py-2 border border-supporting rounded-sm focus:ring-1 focus:ring-accent" />
+                <input type="url" value={formData.mobileImage} onChange={(e) => setFormData({...formData, mobileImage: e.target.value})} className="w-full px-3 py-2 border border-supporting rounded-sm focus:ring-1 focus:ring-accent" placeholder="https://..." />
+                <input ref={mobileImageInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/avif" onChange={handleMobileImageUpload} className="hidden" />
+                <button type="button" onClick={() => mobileImageInputRef.current?.click()} disabled={isMobileUploading} className="mt-2 inline-flex items-center gap-2 border border-supporting px-3 py-2 text-xs font-semibold text-primary hover:bg-gray-50 disabled:opacity-60">
+                  {isMobileUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <UploadCloud className="h-4 w-4" />}
+                  {isMobileUploading ? 'Uploading…' : 'Upload image'}
+                </button>
+                {formData.mobileImage && <img src={formData.mobileImage} alt="Mobile Preview" className="mt-2 h-20 object-cover border border-gray-200 rounded" />}
               </div>
               
               <div className="grid grid-cols-2 gap-4 items-center">

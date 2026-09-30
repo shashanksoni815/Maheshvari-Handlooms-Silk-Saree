@@ -225,7 +225,7 @@ export const Checkout = () => {
 
               <div>
                 <label className="block text-xs font-bold uppercase tracking-widest text-secondary mb-2">Phone Number</label>
-                <input {...register('phone')} className="w-full border border-supporting bg-background px-4 py-3 focus:outline-none focus:border-primary text-secondary" placeholder="+91 98765 43210" />
+                <input {...register('phone')} className="w-full border border-supporting bg-background px-4 py-3 focus:outline-none focus:border-primary text-secondary" placeholder="+91 91793 38474" />
                 {errors.phone && <p className="text-burgundy text-xs mt-2">{errors.phone.message}</p>}
               </div>
 

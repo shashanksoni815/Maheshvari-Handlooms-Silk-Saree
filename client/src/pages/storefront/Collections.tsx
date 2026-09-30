@@ -35,9 +35,9 @@ export const Collections = () => {
   if (error || collections.length === 0) {
     return (
       <div className="min-h-[70vh] flex flex-col justify-center items-center bg-background p-6 text-center">
-        <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-accent mb-2">Heritage Edits</span>
+        <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-accent mb-2">Heritage Collections</span>
         <h1 className="text-3xl font-serif font-bold text-primary mb-2">No Collections Found</h1>
-        <p className="text-secondary text-xs sm:text-sm mb-6">Our master weavers are preparing upcoming seasonal edits.</p>
+        <p className="text-secondary text-xs sm:text-sm mb-6">Our master weavers are preparing upcoming seasonal collections.</p>
         <Link to="/shop" className="bg-primary text-white px-8 py-3.5 rounded-full text-xs font-bold uppercase tracking-widest shadow-md hover:bg-accent hover:text-primary transition-all">
           Explore All Sarees
         </Link>
@@ -56,7 +56,7 @@ export const Collections = () => {
         />
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden">
           <span className="text-[18vw] font-extrabold tracking-tighter text-white/5 uppercase leading-none font-serif">
-            EDITS
+            COLLECTIONS
           </span>
         </div>
 
@@ -64,7 +64,7 @@ export const Collections = () => {
           <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <span className="inline-flex items-center gap-1.5 bg-white/10 backdrop-blur-md text-amber-300 text-[10px] font-bold uppercase tracking-[0.3em] px-4 py-1.5 rounded-full border border-white/20 mb-6">
               <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-              Bespoke Handloom Edits
+              Bespoke Handloom Collections
             </span>
           </motion.div>
           <motion.h1 
@@ -118,7 +118,7 @@ export const Collections = () => {
                 {/* Content Side */}
                 <div className="w-full lg:w-1/2 flex flex-col justify-center items-start lg:px-4">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-amber-800 bg-amber-50 px-3.5 py-1.5 rounded-full border border-amber-200/80 mb-4">
-                    {collection.isFeatured ? 'Featured Heritage Edit' : 'Handloom Series'}
+                    {collection.isFeatured ? 'Featured Heritage Collection' : 'Handloom Series'}
                   </span>
                   
                   <h2 className="text-3xl sm:text-4xl font-serif font-bold tracking-tight text-primary mb-4">
@@ -133,7 +133,7 @@ export const Collections = () => {
                     to={`/collections/${collection.slug}`}
                     className="inline-flex items-center gap-2 bg-primary text-white px-8 py-3.5 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-accent hover:text-primary transition-all shadow-md"
                   >
-                    Explore Edit <ArrowRight className="w-4 h-4" />
+                    Explore Collection <ArrowRight className="w-4 h-4" />
                   </Link>
                 </div>
               </div>

@@ -70,12 +70,13 @@ export const AboutUs = () => {
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-          <div className="rounded-3xl overflow-hidden shadow-xl border border-supporting aspect-[4/3] bg-primary/10">
+          <div className="rounded-3xl overflow-hidden shadow-xl border border-supporting aspect-[4/3] bg-primary/10 relative group">
             <img 
-              src="https://images.unsplash.com/photo-1583391733958-6c5188f54124?q=80&w=1000&auto=format&fit=crop" 
-              alt="Artisan Weaving" 
-              className="w-full h-full object-cover"
+              src="https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=1200" 
+              alt="Artisan Handloom Weaving" 
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
             />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
           </div>
 
           <div className="space-y-6 lg:pl-6">

@@ -10,19 +10,19 @@ const navItems = [
 ];
 
 export const DesktopNavigation = () => (
-  <nav aria-label="Main navigation" className="hidden h-full flex-1 items-center justify-center gap-6 xl:gap-8 lg:flex">
+  <nav aria-label="Main navigation" className="hidden h-full flex-1 items-center justify-center gap-7 xl:gap-10 lg:flex">
     {navItems.map((item) => (
       <NavLink
         key={item.name}
         to={item.path}
         className={({ isActive }) =>
-          `group relative flex h-full items-center text-[11px] font-medium uppercase tracking-[0.22em] transition-colors ${
+          `group relative flex h-full items-center text-[12px] xl:text-[13px] font-semibold uppercase tracking-[0.22em] transition-colors ${
             isActive ? 'text-[#B58A3A]' : 'text-[#29231D] hover:text-[#B58A3A]'
           }`
         }
       >
         {item.name}
-        <span className="absolute -bottom-1 left-0 h-px w-full origin-left scale-x-0 bg-[#B58A3A] transition-transform duration-200 group-hover:scale-x-100" />
+        <span className="absolute -bottom-1 left-0 h-0.5 w-full origin-left scale-x-0 bg-[#B58A3A] transition-transform duration-200 group-hover:scale-x-100" />
       </NavLink>
     ))}
   </nav>

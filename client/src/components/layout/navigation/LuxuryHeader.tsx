@@ -42,40 +42,44 @@ export const LuxuryHeader = () => {
         }`}
       >
         <div className="mx-auto w-full max-w-[1600px]">
-          <div className={`hidden items-center justify-between px-6 transition-all duration-300 lg:flex ${isScrolled ? 'h-14' : 'h-16'}`}>
-            <div className="w-[180px] shrink-0">
+          <div className={`hidden items-center justify-between px-8 transition-all duration-300 lg:flex ${isScrolled ? 'h-20' : 'h-24'}`}>
+            <div className="w-[260px] shrink-0">
               <Link to="/" className="inline-flex items-center">
-                <img src="/logo.png" alt="Maheshwari Silk Handloom Saree" className="h-8 w-auto object-contain lg:h-10" />
+                <img 
+                  src="/logo.png" 
+                  alt="Maheshwari Silk Handloom Saree" 
+                  className={`w-auto object-contain transition-all duration-300 ${isScrolled ? 'h-12 lg:h-14' : 'h-15 lg:h-18'}`} 
+                />
               </Link>
             </div>
 
             <DesktopNavigation />
 
-            <div className="flex w-[180px] shrink-0 items-center justify-end gap-4">
+            <div className="flex w-[220px] shrink-0 items-center justify-end gap-5 lg:gap-6">
               <button 
                 onClick={() => setIsSearchOpen(true)}
-                className="text-[#29231D] hover:text-[#B58A3A] transition-colors p-1"
+                className="text-[#29231D] hover:text-[#B58A3A] transition-colors p-1.5"
                 aria-label="Search"
               >
-                <Search className="h-4 w-4" strokeWidth={1.8} />
+                <Search className="h-5 w-5" strokeWidth={1.8} />
               </button>
               
               <div className="relative">
                 <button 
                   onClick={() => setIsAccountOpen(!isAccountOpen)}
                   onMouseEnter={() => setIsAccountOpen(true)}
-                  className="text-[#29231D] hover:text-[#B58A3A] transition-colors p-1"
+                  className="text-[#29231D] hover:text-[#B58A3A] transition-colors p-1.5"
                   aria-label="Account"
                 >
-                  <User className="h-4 w-4" strokeWidth={1.8} />
+                  <User className="h-5 w-5" strokeWidth={1.8} />
                 </button>
                 <AccountDropdown isOpen={isAccountOpen} onClose={() => setIsAccountOpen(false)} />
               </div>
 
-              <Link to="/wishlist" className="relative text-[#29231D] hover:text-[#B58A3A] transition-colors p-1" aria-label="Wishlist">
-                <Heart className="h-4 w-4" strokeWidth={1.8} />
+              <Link to="/wishlist" className="relative text-[#29231D] hover:text-[#B58A3A] transition-colors p-1.5" aria-label="Wishlist">
+                <Heart className="h-5 w-5" strokeWidth={1.8} />
                 {wishlistCount > 0 && (
-                  <span className="absolute -right-1.5 -top-1.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-[#B58A3A] px-1 text-[8px] font-bold text-white">
+                  <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#B58A3A] px-1 text-[9px] font-bold text-white">
                     {wishlistCount}
                   </span>
                 )}
@@ -83,12 +87,12 @@ export const LuxuryHeader = () => {
 
               <button 
                 onClick={toggleDrawer} 
-                className="relative text-[#29231D] hover:text-[#B58A3A] transition-colors p-1"
+                className="relative text-[#29231D] hover:text-[#B58A3A] transition-colors p-1.5"
                 aria-label="Shopping Bag"
               >
-                <ShoppingBag className="h-4 w-4" strokeWidth={1.8} />
+                <ShoppingBag className="h-5 w-5" strokeWidth={1.8} />
                 {cartCount > 0 && (
-                  <span className="absolute -right-1.5 -top-1.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-[#063F35] px-1 text-[8px] font-bold text-white">
+                  <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#063F35] px-1 text-[9px] font-bold text-white">
                     {cartCount}
                   </span>
                 )}

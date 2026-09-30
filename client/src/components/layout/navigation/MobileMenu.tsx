@@ -56,8 +56,8 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose }) => {
             className="fixed inset-y-0 left-0 w-full max-w-[85vw] sm:max-w-md bg-background shadow-2xl z-[110] lg:hidden flex flex-col"
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-supporting shrink-0 h-[68px]">
-              <img src="/logo.png" alt="Maheshwari Silk" className="h-10 w-auto object-contain" />
+            <div className="flex items-center justify-between p-4 border-b border-supporting shrink-0 h-[72px]">
+              <img src="/logo.png" alt="Maheshwari Silk" className="h-12 w-auto object-contain" />
               <button onClick={onClose} className="p-2 text-secondary hover:text-primary transition-colors" aria-label="Close menu">
                 <X className="w-6 h-6" strokeWidth={1.5} />
               </button>

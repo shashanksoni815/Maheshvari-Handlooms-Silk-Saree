@@ -10,7 +10,7 @@ export const Settings = () => {
   const [formData, setFormData] = useState({
     STORE_NAME: 'Maheshwari Handloom',
     CONTACT_EMAIL: 'support@maheshwari.com',
-    CONTACT_PHONE: '+91 9876543210',
+    CONTACT_PHONE: '+91 9179338474',
     CURRENCY: 'INR',
     TAX_RATE: '18',
     FLAT_SHIPPING_RATE: '100',

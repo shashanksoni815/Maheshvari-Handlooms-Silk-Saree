@@ -7,6 +7,7 @@ import { AdminLayout } from './layouts/AdminLayout';
 import { StorefrontLayout } from './layouts/StorefrontLayout';
 import { ProtectedRoute } from './features/auth/ProtectedRoute';
 import { Loader } from './components/common/Loader';
+import { ScrollToTop } from './components/common/ScrollToTop';
 
 const Dashboard = React.lazy(() => import('./pages/admin/Dashboard').then(m => ({ default: m.Dashboard })));
 const Products = React.lazy(() => import('./pages/admin/Products').then(m => ({ default: m.Products })));
@@ -67,6 +68,7 @@ const AccountReviews = React.lazy(() => import('./pages/storefront/AccountSubPag
 const App = () => {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <ConfirmationModalProvider>
         <Suspense fallback={<Loader />}>
           <Routes>

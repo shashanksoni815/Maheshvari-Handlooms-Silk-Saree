@@ -67,7 +67,7 @@ export const CollectionDetail = () => {
         {/* Watermark */}
         <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none select-none overflow-hidden">
           <span className="text-[16vw] font-extrabold tracking-tighter text-white/5 uppercase leading-none font-serif">
-            EDIT
+            COLLECTION
           </span>
         </div>
 
@@ -75,7 +75,7 @@ export const CollectionDetail = () => {
           <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <span className="inline-flex items-center gap-2 border border-amber-300/30 bg-amber-300/10 px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-[0.3em] text-amber-300 backdrop-blur-md mb-6">
               <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-              The Campaign Edit
+              The Heritage Collection
             </span>
           </motion.div>
           
@@ -125,7 +125,7 @@ export const CollectionDetail = () => {
           </div>
         ) : products.length === 0 ? (
           <div className="text-center py-20 bg-white rounded-3xl border border-supporting/60">
-            <p className="text-base text-secondary font-serif">No products currently available in this collection edit.</p>
+            <p className="text-base text-secondary font-serif">No products currently available in this collection.</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-8 sm:gap-x-6 sm:gap-y-12">

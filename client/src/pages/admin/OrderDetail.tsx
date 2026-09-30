@@ -101,24 +101,24 @@ export const OrderDetail = () => {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6 animate-fade-in-up">
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-4">
-          <button onClick={() => navigate('/admin/orders')} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3 min-w-0">
+          <button onClick={() => navigate('/admin/orders')} className="p-2 hover:bg-gray-100 rounded-full transition-colors shrink-0" title="Back to Orders">
             <ArrowLeft className="w-5 h-5 text-primary" />
           </button>
-          <div>
-            <h2 className="text-2xl font-serif text-primary">Order #{orderNumber}</h2>
-            <p className="text-sm text-muted mt-1">{new Date(order.createdAt).toLocaleString('en-IN')}</p>
+          <div className="min-w-0">
+            <h2 className="text-xl sm:text-2xl font-serif text-primary truncate">Order #{orderNumber}</h2>
+            <p className="text-xs sm:text-sm text-muted mt-0.5">{new Date(order.createdAt).toLocaleString('en-IN')}</p>
           </div>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
           <select 
             value={status}
             onChange={(e) => handleStatusChange(e.target.value)}
             disabled={isUpdating || status === 'CANCELLED'}
-            className="px-4 py-2 border border-supporting rounded-sm text-sm font-semibold focus:ring-1 focus:ring-accent disabled:opacity-50"
+            className="flex-1 sm:flex-initial px-4 py-2 border border-supporting rounded-sm text-sm font-semibold focus:ring-1 focus:ring-accent disabled:opacity-50 bg-white"
           >
-            {statusSteps.map(s => <option key={s} value={s}>{s}</option>)}
+            {statusSteps.map(s => <option key={s} value={s}>{s.replace(/_/g, ' ')}</option>)}
             <option value="CANCELLED">CANCELLED</option>
           </select>
           {payStatus === 'COMPLETED' && !order.isRefunded && (
@@ -134,19 +134,24 @@ export const OrderDetail = () => {
       </div>
 
       {status !== 'CANCELLED' && (
-        <div className="bg-white p-6 rounded-md shadow-sm border border-supporting/50">
-          <div className="flex items-center justify-between relative">
-            <div className="absolute left-0 top-1/2 w-full h-1 bg-gray-100 -z-10 -translate-y-1/2"></div>
-            <div className="absolute left-0 top-1/2 h-1 bg-primary -z-10 -translate-y-1/2 transition-all duration-500" style={{ width: `${(Math.max(0, currentStepIndex) / (statusSteps.length - 1)) * 100}%` }}></div>
+        <div className="bg-white p-4 sm:p-6 rounded-md shadow-sm border border-supporting/50 overflow-x-auto scrollbar-thin">
+          <div className="flex items-center justify-between relative min-w-[620px] px-4 py-2">
+            <div className="absolute left-8 right-8 top-5 h-1 bg-gray-100 -z-10"></div>
+            <div 
+              className="absolute left-8 top-5 h-1 bg-primary -z-10 transition-all duration-500" 
+              style={{ width: `calc(${(Math.max(0, currentStepIndex) / (statusSteps.length - 1)) * 100}% - 32px)` }}
+            ></div>
             
             {statusSteps.map((step, index) => {
               const isCompleted = currentStepIndex >= index;
               return (
                 <div key={step} className="flex flex-col items-center bg-white px-2">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${isCompleted ? 'bg-primary border-primary text-white' : 'bg-white border-gray-300 text-gray-300'}`}>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-colors ${isCompleted ? 'bg-primary border-primary text-white' : 'bg-white border-gray-300 text-gray-300'}`}>
                     {isCompleted ? <CheckCircle className="w-5 h-5" /> : <Clock className="w-4 h-4" />}
                   </div>
-                  <span className={`text-xs mt-2 font-bold uppercase ${isCompleted ? 'text-primary' : 'text-gray-400'}`}>{step.replace(/_/g, ' ')}</span>
+                  <span className={`text-[10px] sm:text-xs mt-2 font-bold uppercase tracking-wider text-center ${isCompleted ? 'text-primary' : 'text-gray-400'}`}>
+                    {step.replace(/_/g, ' ')}
+                  </span>
                 </div>
               );
             })}
@@ -156,7 +161,7 @@ export const OrderDetail = () => {
       
       {status === 'CANCELLED' && (
         <div className="bg-red-50 border border-red-200 p-4 rounded-md flex items-center text-red-700">
-          <XCircle className="w-5 h-5 mr-2" />
+          <XCircle className="w-5 h-5 mr-2 shrink-0" />
           This order has been cancelled.
         </div>
       )}
@@ -173,18 +178,26 @@ export const OrderDetail = () => {
             </div>
             <div className="divide-y divide-supporting/50">
               {(order.items || order.orderItems || []).map((item: any, idx: number) => (
-                <div key={idx} className="p-4 flex items-center gap-4">
-                  <img src={item.image || item.product?.images?.[0]} alt={item.name} className="w-16 h-16 object-cover rounded-sm border border-supporting" />
-                  <div className="flex-1">
-                    <h4 className="font-medium text-primary text-sm">{item.name}</h4>
-                    <p className="text-xs text-muted">SKU: {item.product?.sku || 'N/A'}</p>
+                <div key={idx} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <img src={item.image || item.product?.images?.[0]} alt={item.name} className="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-sm border border-supporting shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <h4 className="font-medium text-primary text-sm leading-snug break-words">{item.name}</h4>
+                      <p className="text-xs text-muted mt-0.5">SKU: {item.product?.sku || 'N/A'}</p>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <div className="font-medium text-sm">₹{item.price?.toLocaleString()}</div>
-                    <div className="text-xs text-muted">Qty: {item.quantity || item.qty}</div>
-                  </div>
-                  <div className="font-bold text-primary text-sm w-24 text-right">
-                    ₹{((item.price) * (item.quantity || item.qty)).toLocaleString()}
+                  <div className="flex items-center justify-between sm:justify-end gap-6 pt-2 sm:pt-0 border-t sm:border-t-0 border-supporting/30 text-sm">
+                    <div className="text-left sm:text-right">
+                      <span className="text-xs text-muted sm:hidden">Unit Price: </span>
+                      <span className="font-medium">₹{item.price?.toLocaleString()}</span>
+                      <span className="text-xs text-muted block">Qty: {item.quantity || item.qty}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-xs text-muted sm:hidden">Total: </span>
+                      <span className="font-bold text-primary">
+                        ₹{((item.price) * (item.quantity || item.qty)).toLocaleString()}
+                      </span>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -240,7 +253,7 @@ export const OrderDetail = () => {
               <div>
                 <p className="text-xs text-muted uppercase tracking-wider mb-1">Customer</p>
                 <p className="font-medium text-primary">{order.user?.firstName} {order.user?.lastName}</p>
-                <p className="text-gray-600">{order.user?.email}</p>
+                <p className="text-gray-600 break-all">{order.user?.email}</p>
               </div>
               <div>
                 <p className="text-xs text-muted uppercase tracking-wider mb-1">Shipping Address</p>
@@ -256,7 +269,7 @@ export const OrderDetail = () => {
           <div className="bg-white rounded-md shadow-sm border border-supporting/50 overflow-hidden">
             <div className="p-4 border-b border-supporting/50 bg-gray-50/50">
               <h3 className="font-serif font-bold text-primary flex items-center gap-2">
-                <CreditCard className="w-5 h-5 text-muted" /> Payment Information
+                <CreditCard className="w-5 h-5 text-muted text-primary shrink-0" /> Payment Information
               </h3>
             </div>
             <div className="p-4 space-y-4 text-sm">
@@ -271,9 +284,9 @@ export const OrderDetail = () => {
                 <span className="font-medium">{order.paymentInfo?.method || 'N/A'}</span>
               </div>
               {order.paymentInfo?.razorpayPaymentId && (
-                <div className="flex justify-between items-center">
+                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-1">
                   <span className="text-gray-600">Transaction ID</span>
-                  <span className="font-mono text-xs">{order.paymentInfo.razorpayPaymentId}</span>
+                  <span className="font-mono text-xs break-all">{order.paymentInfo.razorpayPaymentId}</span>
                 </div>
               )}
               {order.isRefunded && (

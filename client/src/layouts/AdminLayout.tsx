@@ -1,4 +1,4 @@
-
+import { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { 
@@ -18,11 +18,14 @@ import {
   Archive,
   Star,
   Image as ImageIcon,
-  Key
+  Key,
+  Menu,
+  X
 } from 'lucide-react';
 import { usePermissions } from '../hooks/usePermissions';
 
 export const AdminLayout = () => {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { logout, user } = useAuthStore();
   const location = useLocation();
   const { hasPermission, isSuperAdmin } = usePermissions();
@@ -49,13 +52,27 @@ export const AdminLayout = () => {
   ];
 
   return (
-    <div className="flex h-screen bg-background font-sans">
+    <div className="flex h-screen bg-background font-sans overflow-hidden">
+      {/* Mobile Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 z-20 lg:hidden backdrop-blur-sm" 
+          onClick={() => setIsMobileMenuOpen(false)} 
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-64 bg-primary flex flex-col shadow-xl z-10 text-white">
-        <div className="h-20 flex items-center px-6 border-b border-primary-light/20">
+      <aside className={`fixed inset-y-0 left-0 transform ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"} lg:relative lg:translate-x-0 transition duration-300 ease-in-out w-64 bg-primary flex flex-col shadow-xl z-30 text-white shrink-0`}>
+        <div className="h-20 flex items-center justify-between px-6 border-b border-primary-light/20">
           <span className="text-xl font-serif text-accent font-semibold tracking-widest uppercase">
             Admin Portal
           </span>
+          <button 
+            className="lg:hidden text-white/70 hover:text-white"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
         
         <nav className="flex-1 px-4 py-8 space-y-2 overflow-y-auto custom-scrollbar">
@@ -94,13 +111,21 @@ export const AdminLayout = () => {
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 overflow-y-auto bg-[#F9F9F9]">
-        <div className="h-20 bg-white border-b border-supporting flex items-center justify-between px-10 sticky top-0 z-10">
-          <h1 className="text-2xl font-serif text-primary capitalize tracking-wide">
-            {location.pathname === '/admin' ? 'Dashboard Overview' : location.pathname.split('/').pop()}
-          </h1>
-          <div className="flex items-center gap-6">
-            <Link to="/" className="text-xs uppercase tracking-widest font-bold text-muted hover:text-accent transition-colors">
+      <main className="flex-1 flex flex-col min-w-0 bg-[#F9F9F9] h-screen overflow-hidden">
+        <div className="h-20 bg-white border-b border-supporting flex items-center justify-between px-4 sm:px-10 shrink-0 shadow-sm z-10">
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => setIsMobileMenuOpen(true)} 
+              className="lg:hidden text-primary p-1 hover:bg-neutral-100 rounded-md"
+            >
+              <Menu className="h-6 w-6" />
+            </button>
+            <h1 className="text-lg sm:text-2xl font-serif text-primary capitalize tracking-wide truncate">
+              {location.pathname === '/admin' ? 'Dashboard Overview' : location.pathname.split('/').pop()}
+            </h1>
+          </div>
+          <div className="flex items-center gap-4 sm:gap-6">
+            <Link to="/" className="hidden sm:block text-xs uppercase tracking-widest font-bold text-muted hover:text-accent transition-colors">
               View Storefront
             </Link>
             <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center text-accent font-serif text-lg shadow-inner uppercase">
@@ -108,7 +133,7 @@ export const AdminLayout = () => {
             </div>
           </div>
         </div>
-        <div className="p-10">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-10 custom-scrollbar">
           <Outlet />
         </div>
       </main>
