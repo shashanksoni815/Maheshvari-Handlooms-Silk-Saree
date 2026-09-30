@@ -4,6 +4,7 @@ import { Heart, Star, ShoppingBag, Zap } from 'lucide-react';
 import { useCartStore } from '../../store/cartStore';
 import { useWishlistStore } from '../../store/wishlistStore';
 import { useAuthStore } from '../../store/authStore';
+import { getOptimizedImageUrl } from '../../utils/image';
 
 interface ProductCardProps {
   product: {
@@ -97,6 +98,9 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({ product }) 
     navigate('/checkout');
   };
 
+  const primaryImageUrl = getOptimizedImageUrl(product.images[0]?.url, 500);
+  const secondaryImageUrl = product.images[1]?.url ? getOptimizedImageUrl(product.images[1]?.url, 500) : null;
+
   return (
     <div 
       className="group relative flex flex-col bg-[#F6F6F8] hover:bg-[#EFF0F3] rounded-[2rem] p-3 sm:p-4 border border-neutral-200/60 transition-all duration-300 shadow-sm hover:shadow-xl w-full max-w-full box-border overflow-hidden"
@@ -107,21 +111,21 @@ export const ProductCard: React.FC<ProductCardProps> = React.memo(({ product }) 
       <div className="relative aspect-[3/4] w-full overflow-hidden rounded-[1.5rem] bg-white flex items-center justify-center">
         <Link to={`/product/${product._id}`} className="block w-full h-full">
           <img
-            src={product.images[0]?.url || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=800'}
+            src={primaryImageUrl}
             alt={product.name}
             loading="lazy"
             decoding="async"
             className={`w-full h-full object-cover object-top transition-transform duration-700 ${isHovered ? 'scale-105' : 'scale-100'}`}
           />
           
-          {/* Secondary Image on Hover */}
-          {product.images[1] && (
+          {/* Secondary Image on Hover - Lazy mounted when hovered */}
+          {secondaryImageUrl && isHovered && (
             <img
-              src={product.images[1]?.url}
+              src={secondaryImageUrl}
               alt={`${product.name} alternate view`}
               loading="lazy"
               decoding="async"
-              className={`absolute inset-0 w-full h-full object-cover object-top transition-opacity duration-700 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
+              className={`absolute inset-0 w-full h-full object-cover object-top transition-opacity duration-700 opacity-100`}
             />
           )}
         </Link>

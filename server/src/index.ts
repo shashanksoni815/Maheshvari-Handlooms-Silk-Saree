@@ -35,9 +35,13 @@ const ensureDatabaseConnected = () => {
   return databaseConnection;
 };
 
+import compression from 'compression';
 import cookieParser from 'cookie-parser';
 
 const app: Application = express();
+
+// Enable Gzip/Brotli HTTP compression
+app.use(compression({ level: 6 }));
 
 // Middleware
 app.use(express.json({
@@ -97,6 +101,18 @@ app.use(async (_req: Request, _res: Response, next: express.NextFunction) => {
   } catch (error) {
     next(error);
   }
+});
+
+// Cache Control Middleware for public GET endpoints
+app.use((req: Request, res: Response, next: express.NextFunction) => {
+  if (req.method === 'GET') {
+    if (req.path.startsWith('/api/v1/banners') || req.path.startsWith('/api/v1/categories') || req.path.startsWith('/api/v1/collections')) {
+      res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=600, stale-while-revalidate=60');
+    } else if (req.path.startsWith('/api/v1/products') || req.path.startsWith('/api/v1/blogs')) {
+      res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=120, stale-while-revalidate=30');
+    }
+  }
+  next();
 });
 
 // Routes

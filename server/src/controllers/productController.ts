@@ -1,7 +1,63 @@
 import { Request, Response, NextFunction } from 'express';
 import Product from '../models/Product';
+import Banner from '../models/Banner';
+import Category from '../models/Category';
+import Collection from '../models/Collection';
 import { ApiError } from '../utils/apiError';
 import { ApiResponse } from '../utils/apiResponse';
+
+export const getHomeFeed = async (_req: Request, res: Response, next: NextFunction) => {
+  try {
+    const [banners, categories, collections, newArrivalsRes, trendingRes] = await Promise.all([
+      Banner.find({ isActive: true }).sort({ sortOrder: 1 }).lean(),
+      Category.find({ isActive: true }).sort({ sortOrder: 1 }).lean(),
+      Collection.find({ isActive: true }).sort({ createdAt: -1 }).lean(),
+      Product.find({ status: 'PUBLISHED', tags: 'new' })
+        .populate('category', 'name slug')
+        .populate('collections', 'name slug')
+        .limit(4)
+        .lean(),
+      Product.find({ status: 'PUBLISHED', tags: 'trending' })
+        .populate('category', 'name slug')
+        .populate('collections', 'name slug')
+        .limit(4)
+        .lean(),
+    ]);
+
+    let newArrivals = newArrivalsRes;
+    let trendingProducts = trendingRes;
+
+    if (newArrivals.length === 0 || trendingProducts.length === 0) {
+      const fallbacks = await Product.find({ status: 'PUBLISHED' })
+        .populate('category', 'name slug')
+        .populate('collections', 'name slug')
+        .sort({ createdAt: -1 })
+        .limit(8)
+        .lean();
+
+      if (newArrivals.length === 0) newArrivals = fallbacks.slice(0, 4);
+      if (trendingProducts.length === 0) trendingProducts = fallbacks.slice(4, 8);
+    }
+
+    const heroBanners = banners.filter((b: any) => b.position === 'HOME_HERO');
+    const fabricBanners = banners
+      .filter((b: any) => b.position === 'HOME_FABRIC')
+      .sort((a: any, b: any) => a.sortOrder - b.sortOrder);
+
+    res.status(200).json(
+      new ApiResponse('Home feed fetched successfully', {
+        heroBanners,
+        fabricBanners,
+        categories,
+        collections,
+        newArrivals,
+        demandingProducts: trendingProducts,
+      })
+    );
+  } catch (error) {
+    next(error);
+  }
+};
 
 export const getProducts = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -61,7 +117,8 @@ export const getProducts = async (req: Request, res: Response, next: NextFunctio
       .populate('collections', 'name slug')
       .sort(sortOptions)
       .skip(skip)
-      .limit(limitNum);
+      .limit(limitNum)
+      .lean();
 
     const total = await Product.countDocuments(query);
 
@@ -90,7 +147,8 @@ export const getProductById = async (req: Request, res: Response, next: NextFunc
       : Product.findOne({ slug: productKey, status: 'PUBLISHED' });
     const product = await productQuery
       .populate('category', 'name slug')
-      .populate('collections', 'name slug');
+      .populate('collections', 'name slug')
+      .lean();
     if (!product) {
       return next(new ApiError(404, 'Product not found'));
     }

@@ -9,6 +9,7 @@ import { useAuthStore } from '../../store/authStore';
 import { ReviewSection } from '../../components/product/ReviewSection';
 import { RelatedProducts } from '../../components/product/RelatedProducts';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getOptimizedImageUrl } from '../../utils/image';
 
 const Accordion = ({ title, children, defaultOpen = false }: { title: string, children: React.ReactNode, defaultOpen?: boolean }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
@@ -149,7 +150,7 @@ export const ProductDetail = () => {
                     activeImage === idx ? 'border-neutral-900 shadow-md scale-102' : 'border-transparent opacity-60 hover:opacity-100 bg-white'
                   }`}
                 >
-                  <img src={img.url} alt={`Thumbnail ${idx}`} className="w-full h-full object-cover object-top" />
+                  <img src={getOptimizedImageUrl(img.url, 200)} alt={`Thumbnail ${idx}`} loading="lazy" className="w-full h-full object-cover object-top" />
                 </button>
               ))}
             </div>
@@ -163,8 +164,10 @@ export const ProductDetail = () => {
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.3 }}
-                  src={product.images[activeImage]?.url}
+                  src={getOptimizedImageUrl(product.images[activeImage]?.url, 1000)}
                   alt={product.name}
+                  loading="eager"
+                  fetchPriority="high"
                   className="w-full h-full object-cover object-top"
                 />
               </AnimatePresence>

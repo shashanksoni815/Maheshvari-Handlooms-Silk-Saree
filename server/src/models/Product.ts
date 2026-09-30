@@ -92,4 +92,12 @@ const ProductSchema: Schema = new Schema(
   { timestamps: true }
 );
 
+// Performance Indexes for high-speed storefront & search query execution
+ProductSchema.index({ status: 1, createdAt: -1 });
+ProductSchema.index({ status: 1, tags: 1 });
+ProductSchema.index({ status: 1, category: 1 });
+ProductSchema.index({ status: 1, collections: 1 });
+ProductSchema.index({ status: 1, price: 1 });
+ProductSchema.index({ 'attributes.fabric': 1, status: 1 });
+
 export default mongoose.model<IProduct>('Product', ProductSchema);

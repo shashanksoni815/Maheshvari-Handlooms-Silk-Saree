@@ -9,25 +9,32 @@ export default defineConfig({
     tailwindcss(),
   ],
   build: {
-    rolldownOptions: {
+    target: 'esnext',
+    cssCodeSplit: true,
+    chunkSizeWarningLimit: 500,
+    rollupOptions: {
       output: {
-        codeSplitting: {
-          minSize: 20_000,
-          minShareCount: 2,
-          groups: [
-            {
-              name: 'charts',
-              test: /node_modules[\\/](recharts|victory-vendor|d3-[^\\/]+)/,
-              priority: 20,
-            },
-            {
-              name: 'motion',
-              test: /node_modules[\\/](framer-motion|motion-dom|motion-utils)/,
-              priority: 15,
-            },
-          ],
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('recharts') || id.includes('d3')) {
+              return 'vendor-charts';
+            }
+            if (id.includes('framer-motion')) {
+              return 'vendor-motion';
+            }
+            if (id.includes('lucide-react')) {
+              return 'vendor-icons';
+            }
+            if (id.includes('@tanstack') || id.includes('zustand') || id.includes('axios')) {
+              return 'vendor-data';
+            }
+            if (id.includes('react-router-dom') || id.includes('react-dom') || id.includes('react')) {
+              return 'vendor-core';
+            }
+          }
         },
       },
     },
   },
 })
+

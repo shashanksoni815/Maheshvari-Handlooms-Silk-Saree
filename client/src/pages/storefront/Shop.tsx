@@ -6,6 +6,7 @@ import api from '../../services/api';
 import { ProductCard } from '../../components/product/ProductCard';
 import { FilterSidebar } from '../../components/product/FilterSidebar';
 import type { FilterState } from '../../components/product/FilterSidebar';
+import { ProductSkeletonGrid } from '../../components/common/ProductSkeletonGrid';
 
 export const Shop = () => {
   const location = useLocation();
@@ -229,9 +230,7 @@ export const Shop = () => {
           {/* Product Grid */}
           <div className="flex-1 min-w-0">
             {isLoading ? (
-              <div className="flex justify-center items-center h-[50vh]">
-                <Loader2 className="w-10 h-10 animate-spin text-neutral-900" />
-              </div>
+              <ProductSkeletonGrid count={6} />
             ) : error ? (
               <div className="flex flex-col items-center justify-center h-[40vh] text-center bg-white rounded-3xl p-8 border border-neutral-200/80 shadow-sm">
                 <p className="text-lg font-bold text-neutral-900 mb-2">Something went wrong fetching products.</p>

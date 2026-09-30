@@ -5,6 +5,7 @@ import { Shield, Truck, Star, Loader2, ChevronLeft, ChevronRight, Sparkles, Arro
 import { AnimatePresence, motion } from 'framer-motion';
 import api from '../../services/api';
 import { ProductCard } from '../../components/product/ProductCard';
+import { getOptimizedImageUrl } from '../../utils/image';
 
 const EMPTY_BANNERS: any[] = [];
 
@@ -20,8 +21,17 @@ const fadeUp = {
 export const Home = () => {
   const { data: homeData, isLoading } = useQuery({
     queryKey: ['home-page'],
-    staleTime: 5 * 60_000,
+    staleTime: 10 * 60_000,
     queryFn: async () => {
+      try {
+        const feedRes = await api.get('/products/home-feed');
+        if (feedRes.data?.data) {
+          return feedRes.data.data;
+        }
+      } catch {
+        // Fallback for standalone/legacy API environments
+      }
+
       const [bannersRes, categoriesRes, collectionsRes, newArrivalsRes, trendingRes] = await Promise.all([
         api.get('/banners'),
         api.get('/categories'),
@@ -97,20 +107,24 @@ export const Home = () => {
               {heroBanner.link ? (
                 <Link to={heroBanner.link} className="block h-full w-full cursor-pointer">
                   <picture className="block h-full w-full">
-                    {heroBanner.mobileImage && <source media="(max-width: 767px)" srcSet={heroBanner.mobileImage} />}
+                    {heroBanner.mobileImage && <source media="(max-width: 767px)" srcSet={getOptimizedImageUrl(heroBanner.mobileImage, 800)} />}
                     <img
-                      src={heroBanner.image}
+                      src={getOptimizedImageUrl(heroBanner.image, 1400)}
                       alt={heroBanner.title || 'Maheshwari Silk Banner'}
+                      loading="eager"
+                      fetchPriority="high"
                       className="h-full w-full object-cover object-top"
                     />
                   </picture>
                 </Link>
               ) : (
                 <picture className="block h-full w-full">
-                  {heroBanner.mobileImage && <source media="(max-width: 767px)" srcSet={heroBanner.mobileImage} />}
+                  {heroBanner.mobileImage && <source media="(max-width: 767px)" srcSet={getOptimizedImageUrl(heroBanner.mobileImage, 800)} />}
                   <img
-                    src={heroBanner.image}
+                    src={getOptimizedImageUrl(heroBanner.image, 1400)}
                     alt={heroBanner.title || 'Maheshwari Silk Banner'}
+                    loading="eager"
+                    fetchPriority="high"
                     className="h-full w-full object-cover object-top"
                   />
                 </picture>
@@ -210,28 +224,38 @@ export const Home = () => {
         </div>
       </section>
 
-      {/* ─── 3. CIRCULAR CATEGORIES ─── */}
+      {/* ─── 3. CATEGORIES OF SILK WITH FULL-WIDTH HERITAGE BANNER ─── */}
       {categories.length > 0 && (
-        <section className="py-16 px-4 max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-accent block mb-2">Explore By Craft</span>
-            <h2 className="text-3xl md:text-4xl font-serif text-primary font-bold">Categories of Silk</h2>
-            <div className="w-12 h-0.5 bg-accent mx-auto mt-3 rounded-full" />
+        <section className="relative w-full my-0 py-6 sm:py-8 px-4 sm:px-6 overflow-hidden border-y border-amber-800/15 shadow-sm">
+          {/* Background Heritage Banner Image - Edge to Edge */}
+          <div className="absolute inset-0 z-0">
+            <img
+              src="/category-bg.png"
+              alt="Maheshwari Silk Heritage Background"
+              className="w-full h-full object-cover object-center"
+              loading="lazy"
+            />
+            {/* Soft Warm Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-b from-white/40 via-amber-50/20 to-white/50 backdrop-blur-[1px]" />
           </div>
 
-          <div className="flex justify-start md:justify-center items-center gap-8 overflow-x-auto pb-4 custom-scrollbar">
+          <div className="relative z-10 max-w-7xl mx-auto text-center mb-6">
+            <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-accent block mb-1">Explore By Craft</span>
+            <h2 className="text-2xl sm:text-3xl font-serif text-primary font-bold">Categories of Silk</h2>
+            <div className="w-10 h-0.5 bg-accent mx-auto mt-2 rounded-full" />
+          </div>
+
+          <div className="relative z-10 max-w-7xl mx-auto flex justify-center items-center gap-6 sm:gap-8 overflow-x-auto pb-2 custom-scrollbar text-center">
             {categories.map((cat, i) => (
-              <Link key={cat._id || i} to={`/shop?category=${cat.slug}`} className="group flex flex-col items-center gap-3 shrink-0">
-                <div className="w-28 h-28 rounded-full p-1 border-2 border-transparent group-hover:border-accent transition-all duration-300 shadow-sm group-hover:shadow-lg bg-white">
-                  {cat.image ? (
-                    <img src={cat.image} alt={cat.name} className="w-full h-full object-cover rounded-full group-hover:scale-105 transition-transform duration-500" />
-                  ) : (
-                    <div className="w-full h-full rounded-full bg-primary/10 flex items-center justify-center text-xs text-primary font-serif font-bold text-center p-2">
-                      {cat.name}
-                    </div>
-                  )}
+              <Link key={cat._id || i} to={`/shop?category=${cat.slug}`} className="group flex flex-col items-center gap-2.5 shrink-0">
+                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full p-1 border-2 border-amber-900/20 group-hover:border-accent transition-all duration-300 shadow-md group-hover:shadow-xl bg-white overflow-hidden transform group-hover:scale-105">
+                  <img
+                    src={getOptimizedImageUrl(cat.image, 300)}
+                    alt={cat.name}
+                    className="w-full h-full object-cover rounded-full group-hover:scale-110 transition-transform duration-500"
+                  />
                 </div>
-                <span className="text-xs font-bold uppercase tracking-wider text-primary group-hover:text-accent transition-colors">
+                <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-primary group-hover:text-accent transition-colors drop-shadow-xs">
                   {cat.name}
                 </span>
               </Link>
