@@ -81,8 +81,8 @@ const App = () => {
           <Route path="/collections" element={<Collections />} />
           <Route path="/collections/:slug" element={<CollectionDetail />} />
           <Route path="/product/:id" element={<ProductDetail />} />
+          <Route path="/cart" element={<Cart />} />
           <Route element={<ProtectedRoute />}>
-            <Route path="/cart" element={<Cart />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/order-success/:id" element={<OrderSuccess />} />
             

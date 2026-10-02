@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAuthStore } from '../../store/authStore';
 import api from '../../services/api';
-import { useNavigate, Link } from 'react-router-dom';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -20,6 +20,7 @@ export const LoginForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { setUser } = useAuthStore();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const {
     register,
@@ -37,10 +38,15 @@ export const LoginForm = () => {
       const userData = response.data.data;
       setUser(userData, userData.accessToken);
       
+      const from = (location.state as { from?: { pathname?: string; search?: string; hash?: string } } | null)?.from;
+      const returnPath = from?.pathname?.startsWith('/') && !from.pathname.startsWith('//')
+        ? `${from.pathname}${from.search || ''}${from.hash || ''}`
+        : null;
+
       if (userData.role === 'ADMIN' || userData.role === 'SUPER_ADMIN') {
-        navigate('/admin');
+        navigate(returnPath?.startsWith('/admin') ? returnPath : '/admin');
       } else {
-        navigate('/account');
+        navigate(returnPath && !returnPath.startsWith('/admin') ? returnPath : '/account');
       }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to login. Please try again.');
@@ -122,7 +128,7 @@ export const LoginForm = () => {
           <div className="mt-10 pt-8 border-t border-supporting text-center">
             <p className="text-secondary text-sm">
               Don't have an account?{' '}
-              <Link to="/register" className="text-primary font-medium hover:text-accent transition-colors">
+              <Link to="/register" state={{ from: (location.state as { from?: unknown } | null)?.from }} className="text-primary font-medium hover:text-accent transition-colors">
                 Create one now
               </Link>
             </p>

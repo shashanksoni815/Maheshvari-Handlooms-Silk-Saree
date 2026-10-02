@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAuthStore } from '../../store/authStore';
 import api from '../../services/api';
-import { useNavigate, Link } from 'react-router-dom';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -22,6 +22,7 @@ export const RegisterForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { setUser } = useAuthStore();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const {
     register,
@@ -37,7 +38,11 @@ export const RegisterForm = () => {
     try {
       const response = await api.post('/auth/register', data);
       setUser(response.data.data);
-      navigate('/account');
+      const from = (location.state as { from?: { pathname?: string; search?: string; hash?: string } } | null)?.from;
+      const returnPath = from?.pathname?.startsWith('/') && !from.pathname.startsWith('//')
+        ? `${from.pathname}${from.search || ''}${from.hash || ''}`
+        : '/account';
+      navigate(returnPath.startsWith('/admin') ? '/account' : returnPath);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Registration failed. Please try again.');
     } finally {

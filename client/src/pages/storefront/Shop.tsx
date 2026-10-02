@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Filter, ChevronDown, Loader2, Search, Sparkles } from 'lucide-react';
+import { Filter, ChevronDown, ChevronLeft, ChevronRight, Loader2, Search, Sparkles } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useLocation, useParams } from 'react-router-dom';
 import api from '../../services/api';
@@ -15,6 +15,7 @@ export const Shop = () => {
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const [sortOption, setSortOption] = useState('newest');
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
 
   const [filters, setFilters] = useState<FilterState>({
     category: [],
@@ -26,6 +27,11 @@ export const Shop = () => {
     maxPrice: '',
     inStock: false
   });
+
+  const updateFilters: typeof setFilters = (nextFilters) => {
+    setCurrentPage(1);
+    setFilters(nextFilters);
+  };
 
   // Fetch Categories for sidebar
   const { data: categoryData } = useQuery({
@@ -62,13 +68,14 @@ export const Shop = () => {
 
   // Parse URL to set initial filters
   useEffect(() => {
+    setCurrentPage(1);
     if (categorySlug && categories.length > 0) {
       const matchedCat = categories.find((c: any) => c.slug === categorySlug);
       if (matchedCat) {
         setFilters(prev => ({ ...prev, category: [matchedCat.name] }));
       }
     }
-  }, [categorySlug, categories]);
+  }, [categorySlug, categories, location.search]);
 
   // Construct Query String
   const getQueryString = () => {
@@ -98,6 +105,8 @@ export const Shop = () => {
     if (filters.maxPrice) params.append('maxPrice', filters.maxPrice);
     if (filters.inStock) params.append('inStock', 'true');
     if (sortOption) params.append('sort', sortOption);
+    params.set('page', String(currentPage));
+    params.set('limit', '12');
     
     const activeSearch = searchQuery || searchParams.get('search') || searchParams.get('q');
     if (activeSearch) params.append('search', activeSearch);
@@ -106,7 +115,7 @@ export const Shop = () => {
   };
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['products', filters, sortOption, searchQuery, location.search, categoryData?.data, collectionData?.data],
+    queryKey: ['products', filters, sortOption, searchQuery, currentPage, location.search, categoryData?.data, collectionData?.data],
     queryFn: async () => {
       const qs = getQueryString();
       const response = await api.get(`/products?${qs}`);
@@ -115,7 +124,13 @@ export const Shop = () => {
   });
 
   const products = data?.data?.products || [];
-  const total = data?.data?.pagination?.total || products.length || 0;
+  const total = data?.data?.pagination?.total ?? products.length;
+  const totalPages = data?.data?.pagination?.pages ?? Math.ceil(total / 12);
+
+  const changePage = (page: number) => {
+    setCurrentPage(page);
+    document.getElementById('product-results')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   return (
     <div className="bg-[#FAFBFD] min-h-screen text-neutral-900 overflow-x-hidden">
@@ -164,7 +179,10 @@ export const Shop = () => {
                 type="text" 
                 placeholder="Search on Silk Store..." 
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1);
+                }}
                 className="w-full bg-transparent border-none py-1.5 text-xs text-neutral-900 placeholder:text-neutral-400 focus:outline-none"
               />
               <button 
@@ -202,7 +220,10 @@ export const Shop = () => {
             <div className="relative">
               <select 
                 value={sortOption}
-                onChange={(e) => setSortOption(e.target.value)}
+                onChange={(e) => {
+                  setSortOption(e.target.value);
+                  setCurrentPage(1);
+                }}
                 className="appearance-none bg-white text-xs font-semibold text-neutral-900 border border-neutral-200/80 rounded-full px-3.5 py-1.5 pr-8 shadow-sm hover:bg-neutral-50 focus:outline-none cursor-pointer transition-all"
               >
                 <option value="newest">Newest First</option>
@@ -220,7 +241,7 @@ export const Shop = () => {
           {/* Left Category & Filter Sidebar */}
           <FilterSidebar 
             filters={filters} 
-            setFilters={setFilters} 
+            setFilters={updateFilters}
             isMobileOpen={isMobileFilterOpen} 
             setIsMobileOpen={setIsMobileFilterOpen} 
             categories={categories} 
@@ -228,7 +249,7 @@ export const Shop = () => {
           />
 
           {/* Product Grid */}
-          <div className="flex-1 min-w-0">
+          <div id="product-results" className="flex-1 min-w-0 scroll-mt-24">
             {isLoading ? (
               <ProductSkeletonGrid count={6} />
             ) : error ? (
@@ -257,6 +278,28 @@ export const Shop = () => {
                   <ProductCard key={product._id} product={product} />
                 ))}
               </div>
+            )}
+
+            {!isLoading && !error && totalPages > 1 && (
+              <nav aria-label="Product pages" className="mt-10 flex flex-wrap items-center justify-center gap-4">
+                <button
+                  type="button"
+                  onClick={() => changePage(currentPage - 1)}
+                  disabled={currentPage <= 1}
+                  className="inline-flex min-h-11 items-center gap-2 border border-neutral-300 bg-white px-5 text-xs font-bold uppercase tracking-wider text-neutral-900 transition-colors hover:border-neutral-900 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <ChevronLeft className="h-4 w-4" /> Previous
+                </button>
+                <span aria-live="polite" className="text-xs font-semibold text-neutral-600">Page {currentPage} of {totalPages}</span>
+                <button
+                  type="button"
+                  onClick={() => changePage(currentPage + 1)}
+                  disabled={currentPage >= totalPages}
+                  className="inline-flex min-h-11 items-center gap-2 border border-neutral-900 bg-neutral-900 px-5 text-xs font-bold uppercase tracking-wider text-white transition-colors hover:bg-black disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Next page <ChevronRight className="h-4 w-4" />
+                </button>
+              </nav>
             )}
           </div>
         </div>
